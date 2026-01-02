@@ -1,9 +1,9 @@
 import {
   Users,
   ShieldCheck,
-  Wallet,
-  Coins,
-  Clock,
+  ArrowUpRight,
+  ArrowDownLeft,
+  RefreshCw,
   AlertTriangle,
   TrendingUp,
 } from "lucide-react";
@@ -23,8 +23,44 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards - SEND / RECEIVE / SWAP */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <MetricCard
+          title="SEND Volume (24h)"
+          value="₦85.2M"
+          change="847 transfers"
+          changeType="neutral"
+          icon={ArrowUpRight}
+          iconColor="text-primary"
+        />
+        <MetricCard
+          title="RECEIVE Volume (24h)"
+          value="₦60.0M"
+          change="512 deposits"
+          changeType="neutral"
+          icon={ArrowDownLeft}
+          iconColor="text-success"
+        />
+        <MetricCard
+          title="SWAP Volume (24h)"
+          value="₦42.5M"
+          change="288 swaps"
+          changeType="neutral"
+          icon={RefreshCw}
+          iconColor="text-warning"
+        />
+        <MetricCard
+          title="Revenue (Markup)"
+          value="₦2.34M"
+          change="+15.7% from last month"
+          changeType="positive"
+          icon={TrendingUp}
+          iconColor="text-success"
+        />
+      </div>
+
+      {/* Secondary Metrics */}
+      <div className="grid gap-4 md:grid-cols-4">
         <MetricCard
           title="Total Users"
           value="12,847"
@@ -41,34 +77,6 @@ export default function Dashboard() {
           iconColor="text-success"
         />
         <MetricCard
-          title="Total NGN Float"
-          value="₦847.5M"
-          change="+12.4% from last week"
-          changeType="positive"
-          icon={Wallet}
-          iconColor="text-primary"
-        />
-        <MetricCard
-          title="Stablecoin Float"
-          value="524,875 USDT"
-          change="USDT + USDC combined"
-          changeType="neutral"
-          icon={Coins}
-          iconColor="text-warning"
-        />
-      </div>
-
-      {/* Secondary Metrics */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard
-          title="Transfers Today"
-          value="1,847"
-          change="₦145.2M total volume"
-          changeType="neutral"
-          icon={Clock}
-          iconColor="text-primary"
-        />
-        <MetricCard
           title="Failed Transfers (24h)"
           value="23"
           change="0.8% failure rate"
@@ -77,12 +85,12 @@ export default function Dashboard() {
           iconColor="text-destructive"
         />
         <MetricCard
-          title="Revenue (Markup)"
-          value="₦2.34M"
-          change="+15.7% from last month"
-          changeType="positive"
-          icon={TrendingUp}
-          iconColor="text-success"
+          title="Pending Payouts"
+          value="47"
+          change="₦8.4M queued"
+          changeType="neutral"
+          icon={RefreshCw}
+          iconColor="text-warning"
         />
       </div>
 

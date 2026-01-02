@@ -20,7 +20,7 @@ const transfers = [
     id: "TRF-20241231-001",
     user: "Chinedu Okonkwo",
     userId: "USR-001",
-    direction: "outbound",
+    direction: "send",
     channel: "Bank",
     amount: "₦250,000",
     currency: "NGN",
@@ -29,24 +29,29 @@ const transfers = [
     createdAt: "Dec 31, 2024 14:32:15",
     bank: "Access Bank",
     accountNumber: "0012345678",
+    linkedWalletEvent: "WC-20241231-001",
+    statusHistory: ["INITIATED", "PROCESSING", "COMPLETED"],
   },
   {
     id: "TRF-20241231-002",
     user: "Amara Eze",
     userId: "USR-002",
-    direction: "inbound",
-    channel: "Wallet",
+    direction: "receive",
+    channel: "Bank",
     amount: "₦180,000",
     currency: "NGN",
     provider: "OpenXSwitch",
     status: "completed",
     createdAt: "Dec 31, 2024 13:45:22",
+    source: "GTBank Acct ***4521",
+    linkedWalletEvent: "WC-20241231-002",
+    statusHistory: ["INITIATED", "CONFIRMED", "CREDITED"],
   },
   {
     id: "TRF-20241231-003",
     user: "Ibrahim Musa",
     userId: "USR-003",
-    direction: "outbound",
+    direction: "send",
     channel: "Bank",
     amount: "₦500,000",
     currency: "NGN",
@@ -55,25 +60,28 @@ const transfers = [
     createdAt: "Dec 31, 2024 12:18:44",
     bank: "GTBank",
     accountNumber: "0234567890",
-    age: 35, // minutes
+    age: 35,
+    statusHistory: ["INITIATED", "PROCESSING"],
   },
   {
     id: "TRF-20241231-004",
     user: "Folake Adeyemi",
     userId: "USR-004",
-    direction: "outbound",
+    direction: "send",
     channel: "Mobile Money",
     amount: "₦75,000",
     currency: "NGN",
     provider: "OpenXSwitch",
     status: "completed",
     createdAt: "Dec 31, 2024 11:05:33",
+    linkedWalletEvent: "WC-20241231-004",
+    statusHistory: ["INITIATED", "PROCESSING", "COMPLETED"],
   },
   {
     id: "TRF-20241231-005",
     user: "Emeka Nwosu",
     userId: "USR-005",
-    direction: "outbound",
+    direction: "send",
     channel: "Bank",
     amount: "₦1,200,000",
     currency: "NGN",
@@ -83,22 +91,26 @@ const transfers = [
     failureReason: "Bank timeout - destination unreachable",
     bank: "Zenith Bank",
     accountNumber: "1234567890",
+    statusHistory: ["INITIATED", "PROCESSING", "FAILED"],
   },
   {
     id: "TRF-20241230-001",
     user: "Ngozi Obi",
     userId: "USR-006",
-    direction: "inbound",
-    channel: "Bank",
+    direction: "receive",
+    channel: "Wallet",
     amount: "₦320,000",
     currency: "NGN",
-    provider: "OpenXSwitch",
+    provider: "Yellow Card",
     status: "completed",
     createdAt: "Dec 30, 2024 16:45:11",
+    source: "Yellow Card Rails",
+    linkedWalletEvent: "WC-20241230-001",
+    statusHistory: ["INITIATED", "CONFIRMED", "CREDITED"],
   },
 ];
 
-const payoutQueue = transfers.filter(t => t.status === "pending" && t.direction === "outbound");
+const payoutQueue = transfers.filter(t => t.status === "pending" && t.direction === "send");
 
 function getSLAIndicator(age: number | undefined) {
   if (!age) return null;
@@ -163,8 +175,8 @@ export default function Transfers() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Directions</SelectItem>
-                <SelectItem value="inbound">Inbound</SelectItem>
-                <SelectItem value="outbound">Outbound</SelectItem>
+                <SelectItem value="send">SEND</SelectItem>
+                <SelectItem value="receive">RECEIVE</SelectItem>
               </SelectContent>
             </Select>
             <Select defaultValue="all">
@@ -230,12 +242,17 @@ export default function Transfers() {
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        {tx.direction === "inbound" ? (
+                        {tx.direction === "receive" ? (
                           <ArrowDownLeft className="h-4 w-4 text-success" />
                         ) : (
                           <ArrowUpRight className="h-4 w-4 text-primary" />
                         )}
-                        <span className="capitalize">{tx.direction}</span>
+                        <span className={cn(
+                          "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
+                          tx.direction === "receive" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
+                        )}>
+                          {tx.direction.toUpperCase()}
+                        </span>
                       </div>
                     </td>
                     <td>
@@ -399,18 +416,18 @@ export default function Transfers() {
                   <div
                     className={cn(
                       "flex h-10 w-10 items-center justify-center rounded-full",
-                      selectedTx.direction === "inbound" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
+                      selectedTx.direction === "receive" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
                     )}
                   >
-                    {selectedTx.direction === "inbound" ? (
+                    {selectedTx.direction === "receive" ? (
                       <ArrowDownLeft className="h-5 w-5" />
                     ) : (
                       <ArrowUpRight className="h-5 w-5" />
                     )}
                   </div>
                   <div>
-                    <p className="text-lg font-semibold capitalize">
-                      {selectedTx.direction} Transfer
+                    <p className="text-lg font-semibold">
+                      {selectedTx.direction.toUpperCase()} Transfer
                     </p>
                     <StatusBadge
                       status={
@@ -434,6 +451,32 @@ export default function Transfers() {
                   </div>
                 </div>
 
+                {/* Status History for RECEIVE */}
+                {selectedTx.statusHistory && (
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                      Status Lifecycle
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {selectedTx.statusHistory.map((step, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <span className={cn(
+                            "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
+                            i === selectedTx.statusHistory!.length - 1
+                              ? selectedTx.status === "completed" ? "bg-success/10 text-success" : selectedTx.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            {step}
+                          </span>
+                          {i < selectedTx.statusHistory!.length - 1 && (
+                            <span className="text-muted-foreground">→</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Details Grid */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -445,8 +488,26 @@ export default function Transfers() {
                       <p className="font-medium text-sm">{selectedTx.id}</p>
                     </div>
                     <div>
+                      <p className="text-xs text-muted-foreground">Direction</p>
+                      <span className={cn(
+                        "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
+                        selectedTx.direction === "receive" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
+                      )}>
+                        {selectedTx.direction.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
                       <p className="text-xs text-muted-foreground">Channel</p>
                       <p className="font-medium text-sm">{selectedTx.channel}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Provider</p>
+                      <span className={cn(
+                        "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
+                        selectedTx.provider === "OpenXSwitch" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
+                      )}>
+                        {selectedTx.provider}
+                      </span>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">User</p>
@@ -457,18 +518,33 @@ export default function Transfers() {
                       <p className="font-medium text-sm">{selectedTx.userId}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Provider</p>
-                      <p className="font-medium text-sm">{selectedTx.provider}</p>
-                    </div>
-                    <div>
                       <p className="text-xs text-muted-foreground">Created At</p>
                       <p className="font-medium text-sm">{selectedTx.createdAt}</p>
                     </div>
+                    {selectedTx.linkedWalletEvent && (
+                      <div>
+                        <p className="text-xs text-muted-foreground">Wallet Credit</p>
+                        <p className="font-medium text-sm font-mono text-primary">{selectedTx.linkedWalletEvent}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Bank Info */}
-                {selectedTx.bank && (
+                {/* Source Info for RECEIVE */}
+                {selectedTx.direction === "receive" && selectedTx.source && (
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                      Source
+                    </h4>
+                    <div className="rounded-lg border border-success/30 bg-success/5 p-4">
+                      <p className="font-medium">{selectedTx.source}</p>
+                      <p className="text-sm text-muted-foreground">via {selectedTx.provider}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bank Info for SEND */}
+                {selectedTx.direction === "send" && selectedTx.bank && (
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                       Destination

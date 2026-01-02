@@ -19,6 +19,7 @@ const webhooks = [
     source: "OpenXSwitch",
     endpoint: "/webhooks/openxswitch/transfer",
     event: "transfer.completed",
+    eventType: "send",
     status: "success",
     retries: 0,
     linkedTransfer: "TRF-20241231-001",
@@ -32,6 +33,7 @@ const webhooks = [
     source: "Yellow Card",
     endpoint: "/webhooks/yellowcard/payout",
     event: "payout.completed",
+    eventType: "send",
     status: "success",
     retries: 0,
     linkedTransfer: "STO-002",
@@ -45,6 +47,7 @@ const webhooks = [
     source: "OpenXSwitch",
     endpoint: "/webhooks/openxswitch/transfer",
     event: "transfer.failed",
+    eventType: "send",
     status: "failed",
     retries: 3,
     linkedTransfer: "TRF-20241231-005",
@@ -57,42 +60,67 @@ const webhooks = [
   {
     id: "WH-004",
     source: "OpenXSwitch",
-    endpoint: "/webhooks/openxswitch/settlement",
-    event: "settlement.received",
+    endpoint: "/webhooks/openxswitch/deposit",
+    event: "deposit.confirmed",
+    eventType: "receive",
     status: "success",
     retries: 0,
+    linkedTransfer: "TRF-20241231-002",
     timestamp: "Dec 31, 2024 14:25:11",
     responseTime: "156ms",
-    payload: '{"event":"settlement.received","data":{"amount":45200000,"date":"2024-12-31"}}',
+    payload: '{"event":"deposit.confirmed","data":{"amount":180000,"date":"2024-12-31"}}',
     signatureValid: true,
   },
   {
     id: "WH-005",
     source: "Yellow Card",
-    endpoint: "/webhooks/yellowcard/rate",
-    event: "rate.updated",
+    endpoint: "/webhooks/yellowcard/swap",
+    event: "swap.completed",
+    eventType: "swap",
     status: "success",
-    retries: 1,
+    retries: 0,
+    linkedTransfer: "SWP-001",
     timestamp: "Dec 31, 2024 14:22:33",
     responseTime: "234ms",
-    payload: '{"event":"rate.updated","data":{"pair":"NGN/USDT","rate":1018.50}}',
+    payload: '{"event":"swap.completed","data":{"id":"SWP-001","from":"NGN","to":"USDT"}}',
     signatureValid: true,
   },
   {
     id: "WH-006",
     source: "Yellow Card",
-    endpoint: "/webhooks/yellowcard/payout",
-    event: "payout.failed",
+    endpoint: "/webhooks/yellowcard/swap",
+    event: "swap.failed",
+    eventType: "swap",
     status: "failed",
     retries: 3,
-    linkedTransfer: "STO-003",
+    linkedTransfer: "SWP-004",
     timestamp: "Dec 31, 2024 14:18:45",
     responseTime: "timeout",
     error: "Invalid signature",
-    payload: '{"event":"payout.failed","data":{"id":"YC-8847290"}}',
+    payload: '{"event":"swap.failed","data":{"id":"SWP-004"}}',
     signatureValid: false,
   },
+  {
+    id: "WH-007",
+    source: "OpenXSwitch",
+    endpoint: "/webhooks/openxswitch/system",
+    event: "health.check",
+    eventType: "system",
+    status: "success",
+    retries: 0,
+    timestamp: "Dec 31, 2024 14:15:00",
+    responseTime: "45ms",
+    payload: '{"event":"health.check","data":{"status":"healthy"}}',
+    signatureValid: true,
+  },
 ];
+
+const eventTypeColors = {
+  send: "bg-primary/10 text-primary",
+  receive: "bg-success/10 text-success",
+  swap: "bg-warning/10 text-warning",
+  system: "bg-muted text-muted-foreground",
+};
 
 export default function Webhooks() {
   const [selectedWebhook, setSelectedWebhook] = useState<typeof webhooks[0] | null>(null);
@@ -175,6 +203,18 @@ export default function Webhooks() {
           </SelectContent>
         </Select>
         <Select defaultValue="all">
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Event Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="send">SEND</SelectItem>
+            <SelectItem value="receive">RECEIVE</SelectItem>
+            <SelectItem value="swap">SWAP</SelectItem>
+            <SelectItem value="system">SYSTEM</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -196,6 +236,7 @@ export default function Webhooks() {
             <tr>
               <th>ID</th>
               <th>Source</th>
+              <th>Event Type</th>
               <th>Event</th>
               <th>Status</th>
               <th>Retries</th>
@@ -225,6 +266,14 @@ export default function Webhooks() {
                     webhook.source === "OpenXSwitch" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
                   )}>
                     {webhook.source}
+                  </span>
+                </td>
+                <td>
+                  <span className={cn(
+                    "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
+                    eventTypeColors[webhook.eventType as keyof typeof eventTypeColors]
+                  )}>
+                    {webhook.eventType.toUpperCase()}
                   </span>
                 </td>
                 <td className="font-mono text-sm text-muted-foreground">
