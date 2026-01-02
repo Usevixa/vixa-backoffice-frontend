@@ -2,7 +2,7 @@ import {
   Users,
   ShieldCheck,
   Wallet,
-  Bitcoin,
+  Coins,
   Clock,
   AlertTriangle,
   TrendingUp,
@@ -41,7 +41,7 @@ export default function Dashboard() {
           iconColor="text-success"
         />
         <MetricCard
-          title="Total Wallet Balance"
+          title="Total NGN Float"
           value="₦847.5M"
           change="+12.4% from last week"
           changeType="positive"
@@ -49,11 +49,11 @@ export default function Dashboard() {
           iconColor="text-primary"
         />
         <MetricCard
-          title="24h Crypto Volume"
-          value="₦45.2M"
-          change="-3.1% from yesterday"
-          changeType="negative"
-          icon={Bitcoin}
+          title="Stablecoin Float"
+          value="524,875 USDT"
+          change="USDT + USDC combined"
+          changeType="neutral"
+          icon={Coins}
           iconColor="text-warning"
         />
       </div>
@@ -61,15 +61,15 @@ export default function Dashboard() {
       {/* Secondary Metrics */}
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard
-          title="Pending Withdrawals"
-          value="47"
-          change="₦12.8M total value"
+          title="Transfers Today"
+          value="1,847"
+          change="₦145.2M total volume"
           changeType="neutral"
           icon={Clock}
-          iconColor="text-warning"
+          iconColor="text-primary"
         />
         <MetricCard
-          title="Failed Transactions"
+          title="Failed Transfers (24h)"
           value="23"
           change="0.8% failure rate"
           changeType="negative"
@@ -87,26 +87,33 @@ export default function Dashboard() {
       </div>
 
       {/* Alerts */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <AlertCard
-          type="warning"
-          title="5 Pending KYC Reviews"
-          description="Users awaiting verification approval"
-          action="Review"
-          onAction={() => {}}
-        />
+      <div className="grid gap-4 md:grid-cols-4">
         <AlertCard
           type="error"
-          title="3 Failed Webhooks"
-          description="Payment provider callbacks failed"
+          title="3 Stuck Payouts"
+          description="Payouts pending >30 mins"
           action="Investigate"
           onAction={() => {}}
         />
         <AlertCard
+          type="warning"
+          title="5 Webhook Failures"
+          description="OpenXSwitch: 3, Yellow Card: 2"
+          action="View Logs"
+          onAction={() => {}}
+        />
+        <AlertCard
           type="info"
-          title="2 High-Risk Flags"
-          description="Transactions requiring manual review"
-          action="View"
+          title="2 High-Risk Users"
+          description="Flagged for review"
+          action="Review"
+          onAction={() => {}}
+        />
+        <AlertCard
+          type="warning"
+          title="4 Recon Mismatches"
+          description="Settlement exceptions found"
+          action="Reconcile"
           onAction={() => {}}
         />
       </div>

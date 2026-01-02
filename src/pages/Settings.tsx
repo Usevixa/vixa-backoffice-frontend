@@ -30,18 +30,9 @@ export default function Settings() {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Crypto Trading</Label>
+                  <Label>Stablecoin Transfers</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Enable/disable buy and sell crypto functionality
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Gift Card Redemption</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Allow users to submit gift cards for redemption
+                    Enable/disable USDT and USDC transfers
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -50,16 +41,16 @@ export default function Settings() {
                 <div>
                   <Label>Bank Withdrawals</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Enable withdrawals to bank accounts
+                    Enable withdrawals to bank accounts via OpenXSwitch
                   </p>
                 </div>
                 <Switch defaultChecked />
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Voice Commands</Label>
+                  <Label>Mobile Money Transfers</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Process voice messages via WhatsApp
+                    Enable transfers to mobile money wallets
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -79,22 +70,13 @@ export default function Settings() {
 
         <TabsContent value="providers" className="space-y-6">
           <div className="content-card p-6">
-            <h3 className="content-card-title mb-6">Payment Providers</h3>
+            <h3 className="content-card-title mb-6">Transfer Provider</h3>
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Paystack</Label>
+                  <Label>OpenXSwitch</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Primary payment gateway for deposits
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Flutterwave</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Secondary payment gateway and transfers
+                    Bank & mobile money transfer routing
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -103,22 +85,13 @@ export default function Settings() {
           </div>
 
           <div className="content-card p-6">
-            <h3 className="content-card-title mb-6">Crypto Providers</h3>
+            <h3 className="content-card-title mb-6">Stablecoin Provider</h3>
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Quidax</Label>
+                  <Label>Yellow Card</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Primary crypto exchange provider
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>YellowCard</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Secondary/fallback crypto provider
+                    USDT/USDC operations and fiat payouts
                   </p>
                 </div>
                 <Switch defaultChecked />
@@ -132,10 +105,10 @@ export default function Settings() {
             <h3 className="content-card-title mb-6">Alert Thresholds</h3>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>High Value Transaction Alert (NGN)</Label>
+                <Label>High Value Transfer Alert (NGN)</Label>
                 <Input type="number" defaultValue="5000000" />
                 <p className="text-xs text-muted-foreground">
-                  Alert when transaction exceeds this amount
+                  Alert when transfer exceeds this amount
                 </p>
               </div>
               <div className="space-y-2">
@@ -146,7 +119,7 @@ export default function Settings() {
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>Failed Transaction Threshold</Label>
+                <Label>Failed Transfer Threshold</Label>
                 <Input type="number" defaultValue="10" />
                 <p className="text-xs text-muted-foreground">
                   Alert when failures exceed this count per hour
@@ -157,6 +130,20 @@ export default function Settings() {
                 <Input type="number" defaultValue="5" />
                 <p className="text-xs text-muted-foreground">
                   Alert when webhook failures exceed this count
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Payout SLA Threshold (mins)</Label>
+                <Input type="number" defaultValue="30" />
+                <p className="text-xs text-muted-foreground">
+                  Alert when payouts exceed this processing time
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Reconciliation Variance Alert</Label>
+                <Input type="number" defaultValue="100000" />
+                <p className="text-xs text-muted-foreground">
+                  Alert when recon variance exceeds this amount
                 </p>
               </div>
             </div>

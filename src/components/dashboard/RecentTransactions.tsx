@@ -1,66 +1,65 @@
-import { ArrowUpRight, ArrowDownLeft, Gift, Banknote } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, Coins } from "lucide-react";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
 const transactions = [
   {
     id: "TXN-001",
-    user: "Chinedu Okonkwo",
-    type: "buy",
+    user: "Chinedu O.",
+    type: "outbound",
     amount: "₦250,000",
-    crypto: "245.50 USDT",
+    provider: "OpenXSwitch",
     status: "completed",
     time: "2 mins ago",
   },
   {
     id: "TXN-002",
-    user: "Amara Eze",
-    type: "sell",
-    amount: "₦180,000",
-    crypto: "175.00 USDT",
+    user: "Amara E.",
+    type: "stablecoin",
+    amount: "175 USDT",
+    provider: "Yellow Card",
     status: "completed",
     time: "5 mins ago",
   },
   {
     id: "TXN-003",
-    user: "Ibrahim Musa",
-    type: "withdrawal",
+    user: "Ibrahim M.",
+    type: "inbound",
     amount: "₦500,000",
-    crypto: "",
+    provider: "OpenXSwitch",
     status: "pending",
     time: "8 mins ago",
   },
   {
     id: "TXN-004",
-    user: "Folake Adeyemi",
-    type: "gift_card",
-    amount: "₦75,000",
-    crypto: "$50 Amazon",
-    status: "completed",
-    time: "12 mins ago",
+    user: "Emeka N.",
+    type: "stablecoin",
+    amount: "1,180 USDT",
+    provider: "Yellow Card",
+    status: "failed",
+    time: "15 mins ago",
   },
   {
     id: "TXN-005",
-    user: "Emeka Nwosu",
-    type: "buy",
-    amount: "₦1,200,000",
-    crypto: "1,180.00 USDT",
-    status: "failed",
-    time: "15 mins ago",
+    user: "Ngozi O.",
+    type: "outbound",
+    amount: "₦320,000",
+    provider: "OpenXSwitch",
+    status: "completed",
+    time: "22 mins ago",
   },
 ];
 
 const typeIcons = {
-  buy: ArrowDownLeft,
-  sell: ArrowUpRight,
-  withdrawal: Banknote,
-  gift_card: Gift,
+  inbound: ArrowDownLeft,
+  outbound: ArrowUpRight,
+  stablecoin: Coins,
 };
 
 const typeLabels = {
-  buy: "Buy Crypto",
-  sell: "Sell Crypto",
-  withdrawal: "Withdrawal",
-  gift_card: "Gift Card",
+  inbound: "Inbound",
+  outbound: "Outbound",
+  stablecoin: "Stablecoin",
 };
 
 export function RecentTransactions() {
@@ -68,74 +67,56 @@ export function RecentTransactions() {
     <div className="content-card">
       <div className="content-card-header">
         <h3 className="content-card-title">Recent Transactions</h3>
-        <a href="/transactions" className="text-xs font-medium text-primary hover:underline">
+        <a href="/transfers" className="text-sm text-primary hover:underline">
           View all
         </a>
       </div>
-      <div className="overflow-x-auto">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Transaction</th>
-              <th>User</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.map((tx) => {
-              const Icon = typeIcons[tx.type as keyof typeof typeIcons];
-              return (
-                <tr key={tx.id} className="cursor-pointer">
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={cn(
-                          "flex h-8 w-8 items-center justify-center rounded-full",
-                          tx.type === "buy" && "bg-primary/10 text-primary",
-                          tx.type === "sell" && "bg-success/10 text-success",
-                          tx.type === "withdrawal" && "bg-warning/10 text-warning",
-                          tx.type === "gift_card" && "bg-purple-100 text-purple-600"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {typeLabels[tx.type as keyof typeof typeLabels]}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{tx.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="text-muted-foreground">{tx.user}</td>
-                  <td>
-                    <div>
-                      <p className="font-medium">{tx.amount}</p>
-                      {tx.crypto && (
-                        <p className="text-xs text-muted-foreground">{tx.crypto}</p>
-                      )}
-                    </div>
-                  </td>
-                  <td>
-                    <span
-                      className={cn(
-                        "status-badge",
-                        tx.status === "completed" && "status-badge-success",
-                        tx.status === "pending" && "status-badge-warning",
-                        tx.status === "failed" && "status-badge-error"
-                      )}
-                    >
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="text-muted-foreground">{tx.time}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="divide-y divide-border">
+        {transactions.map((tx) => {
+          const Icon = typeIcons[tx.type as keyof typeof typeIcons];
+          return (
+            <div
+              key={tx.id}
+              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-full",
+                    tx.type === "inbound" && "bg-success/10 text-success",
+                    tx.type === "outbound" && "bg-primary/10 text-primary",
+                    tx.type === "stablecoin" && "bg-warning/10 text-warning"
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="font-medium text-foreground">{tx.user}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {typeLabels[tx.type as keyof typeof typeLabels]} • {tx.provider}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-medium">{tx.amount}</p>
+                <div className="flex items-center justify-end gap-2 mt-1">
+                  <StatusBadge
+                    status={
+                      tx.status === "completed"
+                        ? "success"
+                        : tx.status === "pending"
+                        ? "warning"
+                        : "error"
+                    }
+                  >
+                    {tx.status}
+                  </StatusBadge>
+                  <span className="text-xs text-muted-foreground">{tx.time}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
