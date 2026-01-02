@@ -77,7 +77,7 @@ const exceptions = [
     transferId: "TRF-20241231-003",
     createdAt: "Dec 31, 2024 16:00",
     status: "open",
-    description: "Credit not received from provider for completed transfer",
+    description: "RECEIVE credited to wallet but not settled with provider",
   },
   {
     id: "EXC-002",
@@ -87,7 +87,7 @@ const exceptions = [
     transferId: "TRF-20241231-005",
     createdAt: "Dec 31, 2024 15:30",
     status: "open",
-    description: "Amount credited differs from expected by ₦50,000",
+    description: "SEND settled but amount differs from expected by ₦50,000",
   },
   {
     id: "EXC-003",
@@ -100,12 +100,46 @@ const exceptions = [
     description: "Duplicate debit detected for stablecoin operation",
     resolution: "Refund processed to user wallet",
   },
+  {
+    id: "EXC-004",
+    type: "swap_imbalance",
+    provider: "Yellow Card",
+    amount: "₦50,000",
+    transferId: "SWP-20241231-003",
+    createdAt: "Dec 31, 2024 14:00",
+    status: "open",
+    description: "SWAP debit from NGN wallet without matching USDT credit",
+  },
+  {
+    id: "EXC-005",
+    type: "receive_unconfirmed",
+    provider: "OpenXSwitch",
+    amount: "₦180,000",
+    transferId: "TRF-20241231-010",
+    createdAt: "Dec 31, 2024 11:30",
+    status: "open",
+    description: "RECEIVE credited to wallet but not confirmed by provider",
+  },
+  {
+    id: "EXC-006",
+    type: "send_unsettled",
+    provider: "OpenXSwitch",
+    amount: "₦320,000",
+    transferId: "TRF-20241231-008",
+    createdAt: "Dec 31, 2024 10:15",
+    status: "resolved",
+    description: "SEND settled with provider but not debited from wallet",
+    resolution: "Manual debit applied with audit note",
+  },
 ];
 
 const exceptionTypes = {
   missing_credit: { label: "Missing Credit", color: "bg-destructive/10 text-destructive" },
   duplicate_debit: { label: "Duplicate Debit", color: "bg-warning/10 text-warning" },
   amount_mismatch: { label: "Amount Mismatch", color: "bg-primary/10 text-primary" },
+  swap_imbalance: { label: "Swap Imbalance", color: "bg-warning/10 text-warning" },
+  receive_unconfirmed: { label: "Receive Unconfirmed", color: "bg-success/10 text-success" },
+  send_unsettled: { label: "Send Unsettled", color: "bg-primary/10 text-primary" },
 };
 
 export default function ReconciliationSettlement() {
@@ -293,6 +327,9 @@ export default function ReconciliationSettlement() {
                 <SelectItem value="missing_credit">Missing Credit</SelectItem>
                 <SelectItem value="duplicate_debit">Duplicate Debit</SelectItem>
                 <SelectItem value="amount_mismatch">Amount Mismatch</SelectItem>
+                <SelectItem value="swap_imbalance">Swap Imbalance</SelectItem>
+                <SelectItem value="receive_unconfirmed">Receive Unconfirmed</SelectItem>
+                <SelectItem value="send_unsettled">Send Unsettled</SelectItem>
               </SelectContent>
             </Select>
             <Select defaultValue="open">

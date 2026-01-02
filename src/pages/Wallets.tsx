@@ -293,6 +293,31 @@ export default function Wallets() {
                   </div>
                 </div>
 
+                {/* Activity Summary - SEND/RECEIVE/SWAP */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Activity Summary
+                  </h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+                      <p className="text-xs text-muted-foreground">Total Sent</p>
+                      <p className="text-lg font-semibold text-primary">₦1,250,000</p>
+                    </div>
+                    <div className="rounded-lg bg-success/5 border border-success/20 p-3">
+                      <p className="text-xs text-muted-foreground">Total Received</p>
+                      <p className="text-lg font-semibold text-success">₦2,450,000</p>
+                    </div>
+                    <div className="rounded-lg bg-warning/5 border border-warning/20 p-3">
+                      <p className="text-xs text-muted-foreground">Total Swapped In</p>
+                      <p className="text-lg font-semibold text-warning">₦320,000</p>
+                    </div>
+                    <div className="rounded-lg bg-warning/5 border border-warning/20 p-3">
+                      <p className="text-xs text-muted-foreground">Total Swapped Out</p>
+                      <p className="text-lg font-semibold text-warning">₦180,000</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Ledger Entries */}
                 <div className="space-y-4">
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
@@ -300,10 +325,10 @@ export default function Wallets() {
                   </h4>
                   <div className="space-y-2">
                     {[
-                      { type: "credit", amount: "+₦250,000", desc: "Inbound transfer", date: "Dec 31, 2024 14:32" },
-                      { type: "debit", amount: "-₦50,000", desc: "Fee deduction", date: "Dec 31, 2024 14:32" },
-                      { type: "debit", amount: "-₦180,000", desc: "Outbound payout", date: "Dec 31, 2024 13:45" },
-                      { type: "credit", amount: "+₦500,000", desc: "Inbound transfer", date: "Dec 31, 2024 12:18" },
+                      { type: "receive", amount: "+₦250,000", desc: "RECEIVE - Bank deposit", date: "Dec 31, 2024 14:32" },
+                      { type: "send", amount: "-₦50,000", desc: "SEND - Bank payout", date: "Dec 31, 2024 14:32" },
+                      { type: "swap", amount: "-₦180,000", desc: "SWAP - NGN to USDT", date: "Dec 31, 2024 13:45" },
+                      { type: "receive", amount: "+₦500,000", desc: "RECEIVE - Yellow Card", date: "Dec 31, 2024 12:18" },
                     ].map((entry, i) => (
                       <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                         <div>
@@ -312,7 +337,7 @@ export default function Wallets() {
                         </div>
                         <p className={cn(
                           "font-semibold",
-                          entry.type === "credit" ? "text-success" : "text-destructive"
+                          entry.type === "receive" ? "text-success" : entry.type === "swap" ? "text-warning" : "text-destructive"
                         )}>
                           {entry.amount}
                         </p>

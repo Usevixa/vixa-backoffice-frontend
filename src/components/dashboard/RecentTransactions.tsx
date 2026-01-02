@@ -1,4 +1,4 @@
-import { ArrowUpRight, ArrowDownLeft, Coins } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 
@@ -6,7 +6,7 @@ const transactions = [
   {
     id: "TXN-001",
     user: "Chinedu O.",
-    type: "outbound",
+    type: "send",
     amount: "₦250,000",
     provider: "OpenXSwitch",
     status: "completed",
@@ -15,7 +15,7 @@ const transactions = [
   {
     id: "TXN-002",
     user: "Amara E.",
-    type: "stablecoin",
+    type: "swap",
     amount: "175 USDT",
     provider: "Yellow Card",
     status: "completed",
@@ -24,7 +24,7 @@ const transactions = [
   {
     id: "TXN-003",
     user: "Ibrahim M.",
-    type: "inbound",
+    type: "receive",
     amount: "₦500,000",
     provider: "OpenXSwitch",
     status: "pending",
@@ -33,7 +33,7 @@ const transactions = [
   {
     id: "TXN-004",
     user: "Emeka N.",
-    type: "stablecoin",
+    type: "swap",
     amount: "1,180 USDT",
     provider: "Yellow Card",
     status: "failed",
@@ -42,7 +42,7 @@ const transactions = [
   {
     id: "TXN-005",
     user: "Ngozi O.",
-    type: "outbound",
+    type: "send",
     amount: "₦320,000",
     provider: "OpenXSwitch",
     status: "completed",
@@ -51,15 +51,15 @@ const transactions = [
 ];
 
 const typeIcons = {
-  inbound: ArrowDownLeft,
-  outbound: ArrowUpRight,
-  stablecoin: Coins,
+  send: ArrowUpRight,
+  receive: ArrowDownLeft,
+  swap: RefreshCw,
 };
 
 const typeLabels = {
-  inbound: "Inbound",
-  outbound: "Outbound",
-  stablecoin: "Stablecoin",
+  send: "SEND",
+  receive: "RECEIVE",
+  swap: "SWAP",
 };
 
 export function RecentTransactions() {
@@ -83,9 +83,9 @@ export function RecentTransactions() {
                 <div
                   className={cn(
                     "flex h-9 w-9 items-center justify-center rounded-full",
-                    tx.type === "inbound" && "bg-success/10 text-success",
-                    tx.type === "outbound" && "bg-primary/10 text-primary",
-                    tx.type === "stablecoin" && "bg-warning/10 text-warning"
+                    tx.type === "receive" && "bg-success/10 text-success",
+                    tx.type === "send" && "bg-primary/10 text-primary",
+                    tx.type === "swap" && "bg-warning/10 text-warning"
                   )}
                 >
                   <Icon className="h-4 w-4" />
