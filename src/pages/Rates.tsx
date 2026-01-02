@@ -1,29 +1,32 @@
 import { useState } from "react";
-import { Save, History, ToggleLeft, ToggleRight } from "lucide-react";
+import { Save, AlertTriangle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 const rateHistory = [
-  { timestamp: "Dec 31, 2024 14:00", admin: "Admin User", change: "Crypto markup: 2.0% → 2.5%", type: "crypto" },
-  { timestamp: "Dec 31, 2024 10:30", admin: "Admin User", change: "Amazon rate: ₦1,450 → ₦1,500", type: "gift_card" },
+  { timestamp: "Dec 31, 2024 14:00", admin: "Admin User", change: "NGN/USDT markup: 2.0% → 2.5%", type: "stablecoin" },
+  { timestamp: "Dec 31, 2024 10:30", admin: "Admin User", change: "NGN/USDC markup: 1.8% → 2.0%", type: "stablecoin" },
   { timestamp: "Dec 30, 2024 16:00", admin: "Super Admin", change: "Promo rate enabled", type: "promo" },
-  { timestamp: "Dec 29, 2024 09:00", admin: "Admin User", change: "Steam rate: ₦1,300 → ₦1,350", type: "gift_card" },
+  { timestamp: "Dec 29, 2024 09:00", admin: "Admin User", change: "High volume band: 1.5% → 1.2%", type: "band" },
 ];
 
 export default function Rates() {
-  const [cryptoMarkup, setCryptoMarkup] = useState("2.5");
+  const [usdtMarkup, setUsdtMarkup] = useState("2.5");
+  const [usdcMarkup, setUsdcMarkup] = useState("2.0");
   const [promoEnabled, setPromoEnabled] = useState(true);
   const [promoDiscount, setPromoDiscount] = useState("0.5");
 
-  const [giftCardRates, setGiftCardRates] = useState({
-    amazon: "1500",
-    itunes: "1400",
-    steam: "1350",
-    googlePlay: "1450",
-  });
+  // Calculate effective rate
+  const baseRate = 1015;
+  const effectiveUsdtRate = baseRate * (1 + parseFloat(usdtMarkup) / 100);
+  const effectiveUsdcRate = baseRate * (1 + parseFloat(usdcMarkup) / 100);
+
+  // Check for negative spread
+  const hasNegativeSpread = parseFloat(usdtMarkup) < 0 || parseFloat(usdcMarkup) < 0;
 
   return (
     <div className="space-y-6">
@@ -31,34 +34,54 @@ export default function Rates() {
       <div className="page-header">
         <h1 className="page-title">Rates & Markups</h1>
         <p className="page-description">
-          Configure exchange rates and markup percentages
+          Configure stablecoin rates and markup percentages
         </p>
       </div>
 
-      <Tabs defaultValue="crypto" className="space-y-6">
+      <Tabs defaultValue="stablecoin" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="crypto">Crypto Rates</TabsTrigger>
-          <TabsTrigger value="gift_cards">Gift Card Rates</TabsTrigger>
+          <TabsTrigger value="stablecoin">Stablecoin Rates</TabsTrigger>
+          <TabsTrigger value="bands">Transaction Bands</TabsTrigger>
           <TabsTrigger value="history">Change History</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="crypto" className="space-y-6">
+        <TabsContent value="stablecoin" className="space-y-6">
+          {/* Negative Spread Warning */}
+          {hasNegativeSpread && (
+            <div className="alert-card alert-card-error">
+              <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">
+                  Negative spread detected
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Current markup settings will result in a loss. Please adjust.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Current Rates Display */}
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-4">
             <div className="metric-card">
-              <p className="metric-label">Base Rate (Quidax)</p>
-              <p className="metric-value mt-1">₦1,015.00</p>
+              <p className="metric-label">Base Rate (Yellow Card)</p>
+              <p className="metric-value mt-1">₦{baseRate.toFixed(2)}</p>
               <p className="text-xs text-muted-foreground mt-1">Live from provider</p>
             </div>
             <div className="metric-card">
-              <p className="metric-label">Admin Markup</p>
-              <p className="metric-value mt-1">{cryptoMarkup}%</p>
+              <p className="metric-label">USDT Markup</p>
+              <p className="metric-value mt-1">{usdtMarkup}%</p>
+              <p className="text-xs text-muted-foreground mt-1">Configurable</p>
+            </div>
+            <div className="metric-card">
+              <p className="metric-label">USDC Markup</p>
+              <p className="metric-value mt-1">{usdcMarkup}%</p>
               <p className="text-xs text-muted-foreground mt-1">Configurable</p>
             </div>
             <div className="metric-card border-primary/30">
-              <p className="metric-label">Effective User Rate</p>
+              <p className="metric-label">Effective USDT Rate</p>
               <p className="metric-value mt-1 text-primary">
-                ₦{(1015 * (1 + parseFloat(cryptoMarkup) / 100)).toFixed(2)}
+                ₦{effectiveUsdtRate.toFixed(2)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">What users pay</p>
             </div>
@@ -66,39 +89,40 @@ export default function Rates() {
 
           {/* Markup Configuration */}
           <div className="content-card p-6">
-            <h3 className="content-card-title mb-6">Crypto Markup Configuration</h3>
+            <h3 className="content-card-title mb-6">Stablecoin Markup Configuration</h3>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="buyMarkup">Buy Markup (%)</Label>
+                <Label htmlFor="usdtMarkup">NGN/USDT Markup (%)</Label>
                 <div className="flex gap-2">
                   <Input
-                    id="buyMarkup"
+                    id="usdtMarkup"
                     type="number"
                     step="0.1"
-                    value={cryptoMarkup}
-                    onChange={(e) => setCryptoMarkup(e.target.value)}
-                    className="max-w-32"
+                    value={usdtMarkup}
+                    onChange={(e) => setUsdtMarkup(e.target.value)}
+                    className={cn("max-w-32", parseFloat(usdtMarkup) < 0 && "border-destructive")}
                   />
                   <span className="flex items-center text-muted-foreground">%</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Added to base rate for buy orders
+                  Effective rate: ₦{effectiveUsdtRate.toFixed(2)}/USDT
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sellMarkup">Sell Markup (%)</Label>
+                <Label htmlFor="usdcMarkup">NGN/USDC Markup (%)</Label>
                 <div className="flex gap-2">
                   <Input
-                    id="sellMarkup"
+                    id="usdcMarkup"
                     type="number"
                     step="0.1"
-                    defaultValue="1.5"
-                    className="max-w-32"
+                    value={usdcMarkup}
+                    onChange={(e) => setUsdcMarkup(e.target.value)}
+                    className={cn("max-w-32", parseFloat(usdcMarkup) < 0 && "border-destructive")}
                   />
                   <span className="flex items-center text-muted-foreground">%</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Subtracted from base rate for sell orders
+                  Effective rate: ₦{effectiveUsdcRate.toFixed(2)}/USDC
                 </p>
               </div>
             </div>
@@ -134,7 +158,7 @@ export default function Rates() {
             </div>
 
             <div className="mt-6 flex justify-end">
-              <Button>
+              <Button disabled={hasNegativeSpread}>
                 <Save className="mr-2 h-4 w-4" />
                 Save Changes
               </Button>
@@ -142,80 +166,41 @@ export default function Rates() {
           </div>
         </TabsContent>
 
-        <TabsContent value="gift_cards" className="space-y-6">
+        <TabsContent value="bands" className="space-y-6">
           <div className="content-card p-6">
-            <h3 className="content-card-title mb-6">Gift Card Rates (NGN per $1)</h3>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="amazonRate">Amazon</Label>
-                <div className="flex gap-2">
-                  <span className="flex items-center text-muted-foreground">₦</span>
-                  <Input
-                    id="amazonRate"
-                    type="number"
-                    value={giftCardRates.amazon}
-                    onChange={(e) =>
-                      setGiftCardRates({ ...giftCardRates, amazon: e.target.value })
-                    }
-                    className="max-w-32"
-                  />
-                  <span className="flex items-center text-muted-foreground">/ $1</span>
+            <h3 className="content-card-title mb-6">Transaction Band Markups</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Set different markup rates based on transaction volume
+            </p>
+            <div className="space-y-4">
+              {[
+                { band: "₦0 - ₦500,000", markup: "2.5" },
+                { band: "₦500,001 - ₦2,000,000", markup: "2.0" },
+                { band: "₦2,000,001 - ₦10,000,000", markup: "1.5" },
+                { band: "₦10,000,001+", markup: "1.2" },
+              ].map((tier, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-lg border border-border">
+                  <div>
+                    <p className="font-medium">{tier.band}</p>
+                    <p className="text-xs text-muted-foreground">Volume band</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      step="0.1"
+                      defaultValue={tier.markup}
+                      className="w-20"
+                    />
+                    <span className="text-muted-foreground">%</span>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="itunesRate">iTunes</Label>
-                <div className="flex gap-2">
-                  <span className="flex items-center text-muted-foreground">₦</span>
-                  <Input
-                    id="itunesRate"
-                    type="number"
-                    value={giftCardRates.itunes}
-                    onChange={(e) =>
-                      setGiftCardRates({ ...giftCardRates, itunes: e.target.value })
-                    }
-                    className="max-w-32"
-                  />
-                  <span className="flex items-center text-muted-foreground">/ $1</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="steamRate">Steam</Label>
-                <div className="flex gap-2">
-                  <span className="flex items-center text-muted-foreground">₦</span>
-                  <Input
-                    id="steamRate"
-                    type="number"
-                    value={giftCardRates.steam}
-                    onChange={(e) =>
-                      setGiftCardRates({ ...giftCardRates, steam: e.target.value })
-                    }
-                    className="max-w-32"
-                  />
-                  <span className="flex items-center text-muted-foreground">/ $1</span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="googleRate">Google Play</Label>
-                <div className="flex gap-2">
-                  <span className="flex items-center text-muted-foreground">₦</span>
-                  <Input
-                    id="googleRate"
-                    type="number"
-                    value={giftCardRates.googlePlay}
-                    onChange={(e) =>
-                      setGiftCardRates({ ...giftCardRates, googlePlay: e.target.value })
-                    }
-                    className="max-w-32"
-                  />
-                  <span className="flex items-center text-muted-foreground">/ $1</span>
-                </div>
-              </div>
+              ))}
             </div>
 
             <div className="mt-6 flex justify-end">
               <Button>
                 <Save className="mr-2 h-4 w-4" />
-                Save Changes
+                Save Band Rates
               </Button>
             </div>
           </div>
@@ -243,7 +228,7 @@ export default function Rates() {
                     <td>{entry.change}</td>
                     <td>
                       <span className="inline-flex items-center px-2 py-1 rounded bg-muted text-xs font-medium">
-                        {entry.type.replace("_", " ")}
+                        {entry.type}
                       </span>
                     </td>
                   </tr>

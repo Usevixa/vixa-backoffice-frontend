@@ -19,9 +19,9 @@ const reportTypes = [
     lastGenerated: "Dec 31, 2024 10:00",
   },
   {
-    id: "transactions",
-    name: "Transactions Report",
-    description: "Full transaction history with amounts, types, and status",
+    id: "transfers",
+    name: "Transfers Report",
+    description: "Full transfer history with amounts, providers, and status",
     icon: ArrowLeftRight,
     lastGenerated: "Dec 31, 2024 09:30",
   },
@@ -58,13 +58,14 @@ export default function Reports() {
         <div className="flex flex-wrap items-end gap-4">
           <div className="space-y-2">
             <Label>Report Type</Label>
-            <Select defaultValue="transactions">
+            <Select defaultValue="transfers">
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="users">Users</SelectItem>
-                <SelectItem value="transactions">Transactions</SelectItem>
+                <SelectItem value="transfers">Transfers</SelectItem>
+                <SelectItem value="stablecoin">Stablecoin Ops</SelectItem>
                 <SelectItem value="revenue">Revenue</SelectItem>
                 <SelectItem value="audit">Audit Log</SelectItem>
               </SelectContent>
@@ -144,7 +145,7 @@ export default function Reports() {
           </thead>
           <tbody>
             <tr>
-              <td className="font-medium">Daily Transactions Summary</td>
+              <td className="font-medium">Daily Transfers Summary</td>
               <td>Daily at 6:00 AM</td>
               <td className="text-muted-foreground">admin@vixa.com, ops@vixa.com</td>
               <td className="text-muted-foreground">Jan 1, 2025 06:00</td>
