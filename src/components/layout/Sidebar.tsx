@@ -2,9 +2,10 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
+  Building2,
   Wallet,
-  ArrowDownLeft,
   ArrowUpRight,
+  ArrowDownLeft,
   RefreshCw,
   Network,
   Zap,
@@ -17,6 +18,7 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -24,17 +26,17 @@ import { useState } from "react";
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Users", href: "/users", icon: Users },
-  { name: "Wallets & Ledger", href: "/wallets", icon: Wallet },
-  { name: "Deposits", href: "/deposits", icon: ArrowDownLeft },
-  { name: "Withdrawals", href: "/withdrawals", icon: ArrowUpRight },
-  { name: "Swaps", href: "/swaps", icon: RefreshCw },
-  { name: "OpenXSwitch Console", href: "/openxswitch", icon: Network },
-  { name: "Yellow Card Console", href: "/yellowcard", icon: Zap },
+  { name: "Wallet Architecture", href: "/wallet-architecture", icon: Building2 },
+  { name: "Customer Wallets", href: "/customer-wallets", icon: Layers },
+  { name: "Send (OpenXSwitch)", href: "/oxs-send", icon: ArrowUpRight },
+  { name: "Receive (OpenXSwitch)", href: "/oxs-receive", icon: ArrowDownLeft },
+  { name: "Swap (OpenXSwitch)", href: "/oxs-swap", icon: RefreshCw },
+  { name: "YC On/Off-Ramp", href: "/yc-onofframp", icon: Zap },
+  { name: "Deposits (Network In)", href: "/deposits", icon: ArrowDownLeft },
+  { name: "Withdrawals (Network Out)", href: "/withdrawals", icon: ArrowUpRight },
   { name: "Rates & Markups", href: "/rates", icon: Percent },
-  { name: "Compliance & Risk", href: "/compliance", icon: ShieldCheck },
-  { name: "Webhooks & API Logs", href: "/webhooks", icon: Webhook },
+  { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook },
   { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale },
-  { name: "Reports & Exports", href: "/reports", icon: FileBarChart },
   { name: "Admin Roles & Audit Trail", href: "/admin-roles", icon: UserCog },
   { name: "System Settings", href: "/settings", icon: Settings },
 ];
