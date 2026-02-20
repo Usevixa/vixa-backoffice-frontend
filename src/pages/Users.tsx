@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, MoreHorizontal, Eye, UserX, Flag, Ban, AlertTriangle } from "lucide-react";
+import { Search, Filter, MoreHorizontal, Eye, UserX, Flag, Ban, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const users = [
@@ -31,10 +32,18 @@ const users = [
     kyc: "verified",
     wallet: "active",
     riskLevel: "low",
-    balance: "₦2,450,000",
+    balanceNgn: "₦2,450,000",
+    balanceUsdt: "2,450.50 USDT",
+    balanceUsdc: "0 USDC",
+    balanceUsdtEquiv: "2,450.50 USDT",
     created: "Dec 15, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
+    tier: "Verified",
+    bvn: "22345678901",
+    nin: "12345678901",
+    idType: "National ID",
+    verifyMeScore: 99,
   },
   {
     id: "USR-002",
@@ -44,10 +53,18 @@ const users = [
     kyc: "pending",
     wallet: "active",
     riskLevel: "low",
-    balance: "₦890,000",
+    balanceNgn: "₦890,000",
+    balanceUsdt: "875.00 USDT",
+    balanceUsdc: "0 USDC",
+    balanceUsdtEquiv: "875.00 USDT",
     created: "Dec 18, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
+    tier: "Standard",
+    bvn: "22345678902",
+    nin: "12345678902",
+    idType: "Voter's Card",
+    verifyMeScore: null,
   },
   {
     id: "USR-003",
@@ -57,10 +74,18 @@ const users = [
     kyc: "verified",
     wallet: "frozen",
     riskLevel: "high",
-    balance: "₦5,670,000",
+    balanceNgn: "₦5,670,000",
+    balanceUsdt: "5,500.00 USDT",
+    balanceUsdc: "0 USDC",
+    balanceUsdtEquiv: "11,068.00 USDT",
     created: "Nov 22, 2024",
     withdrawalsEnabled: false,
     adminNotes: "Account frozen due to suspicious activity patterns. Under investigation.",
+    tier: "High Value",
+    bvn: "22345678903",
+    nin: "12345678903",
+    idType: "Driver's License",
+    verifyMeScore: 42,
   },
   {
     id: "USR-004",
@@ -70,10 +95,18 @@ const users = [
     kyc: "failed",
     wallet: "active",
     riskLevel: "medium",
-    balance: "₦120,000",
+    balanceNgn: "₦120,000",
+    balanceUsdt: "0 USDT",
+    balanceUsdc: "0 USDC",
+    balanceUsdtEquiv: "117.80 USDT",
     created: "Dec 20, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
+    tier: "Standard",
+    bvn: "22345678904",
+    nin: null,
+    idType: "National ID",
+    verifyMeScore: 0,
   },
   {
     id: "USR-005",
@@ -83,10 +116,18 @@ const users = [
     kyc: "verified",
     wallet: "active",
     riskLevel: "low",
-    balance: "₦15,890,000",
+    balanceNgn: "₦15,890,000",
+    balanceUsdt: "15,600.00 USDT",
+    balanceUsdc: "0 USDC",
+    balanceUsdtEquiv: "31,210.00 USDT",
     created: "Oct 05, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
+    tier: "High Value",
+    bvn: "22345678905",
+    nin: "12345678905",
+    idType: "International Passport",
+    verifyMeScore: 99,
   },
   {
     id: "USR-006",
@@ -96,10 +137,18 @@ const users = [
     kyc: "verified",
     wallet: "active",
     riskLevel: "medium",
-    balance: "₦3,200,000",
+    balanceNgn: "₦3,200,000",
+    balanceUsdt: "0 USDT",
+    balanceUsdc: "875.00 USDC",
+    balanceUsdtEquiv: "4,018.45 USDT",
     created: "Dec 01, 2024",
     withdrawalsEnabled: true,
-    adminNotes: "High volume user - monitor transactions",
+    adminNotes: "High volume user — monitor transactions",
+    tier: "Verified",
+    bvn: "22345678906",
+    nin: "12345678906",
+    idType: "National ID",
+    verifyMeScore: 94,
   },
 ];
 
@@ -109,10 +158,17 @@ const riskLevelColors = {
   high: "bg-destructive/10 text-destructive",
 };
 
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
+
 export default function Users() {
   const [selectedUser, setSelectedUser] = useState<typeof users[0] | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [adminNotes, setAdminNotes] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+
+  const totalPages = Math.max(1, Math.ceil(users.length / pageSize));
+  const paginatedUsers = users.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   const handleViewUser = (user: typeof users[0]) => {
     setSelectedUser(user);
@@ -122,11 +178,10 @@ export default function Users() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <div className="page-header">
         <h1 className="page-title">Users</h1>
         <p className="page-description">
-          Manage platform users, KYC status, and wallet access
+          Manage platform users, KYC status, risk levels, and wallet access
         </p>
       </div>
 
@@ -134,11 +189,7 @@ export default function Users() {
       <div className="flex flex-wrap items-center gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by name, phone, or email..."
-            className="pl-9"
-          />
+          <Input type="search" placeholder="Search by name, phone, user ID..." className="pl-9" />
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-40">
@@ -177,7 +228,7 @@ export default function Users() {
         </Button>
       </div>
 
-      {/* Users Table */}
+      {/* Table */}
       <div className="content-card">
         <table className="data-table">
           <thead>
@@ -187,13 +238,14 @@ export default function Users() {
               <th>KYC Status</th>
               <th>Risk Level</th>
               <th>Wallet</th>
-              <th>Balance</th>
+              <th>Withdrawals</th>
+              <th>USDT Equiv Balance</th>
               <th>Joined</th>
               <th className="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user) => (
+            {paginatedUsers.map((user) => (
               <tr key={user.id} className="cursor-pointer" onClick={() => handleViewUser(user)}>
                 <td>
                   <div>
@@ -204,33 +256,27 @@ export default function Users() {
                 <td className="text-muted-foreground">{user.phone}</td>
                 <td>
                   <StatusBadge
-                    status={
-                      user.kyc === "verified"
-                        ? "success"
-                        : user.kyc === "pending"
-                        ? "warning"
-                        : "error"
-                    }
+                    status={user.kyc === "verified" ? "success" : user.kyc === "pending" ? "warning" : "error"}
                   >
                     {user.kyc}
                   </StatusBadge>
                 </td>
                 <td>
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize",
-                    riskLevelColors[user.riskLevel as keyof typeof riskLevelColors]
-                  )}>
+                  <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize", riskLevelColors[user.riskLevel as keyof typeof riskLevelColors])}>
                     {user.riskLevel}
                   </span>
                 </td>
                 <td>
-                  <StatusBadge
-                    status={user.wallet === "active" ? "success" : "error"}
-                  >
+                  <StatusBadge status={user.wallet === "active" ? "success" : "error"}>
                     {user.wallet}
                   </StatusBadge>
                 </td>
-                <td className="font-medium">{user.balance}</td>
+                <td>
+                  <StatusBadge status={user.withdrawalsEnabled ? "success" : "error"}>
+                    {user.withdrawalsEnabled ? "Enabled" : "Disabled"}
+                  </StatusBadge>
+                </td>
+                <td className="font-semibold text-success">{user.balanceUsdtEquiv}</td>
                 <td className="text-muted-foreground">{user.created}</td>
                 <td className="text-right">
                   <DropdownMenu>
@@ -246,11 +292,11 @@ export default function Users() {
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <UserX className="mr-2 h-4 w-4" />
-                        Freeze All Wallets
+                        {user.wallet === "frozen" ? "Unfreeze" : "Freeze"} Wallets
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Ban className="mr-2 h-4 w-4" />
-                        Disable Withdrawals
+                        {user.withdrawalsEnabled ? "Disable" : "Enable"} Withdrawals
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive">
                         <Flag className="mr-2 h-4 w-4" />
@@ -265,157 +311,242 @@ export default function Users() {
         </table>
       </div>
 
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Rows per page:</span>
+          <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setCurrentPage(1); }}>
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZE_OPTIONS.map((s) => (
+                <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <span className="text-sm text-muted-foreground">
+            Showing {Math.min((currentPage - 1) * pageSize + 1, users.length)}–{Math.min(currentPage * pageSize, users.length)} of {users.length}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Prev
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <Button
+              key={p}
+              variant={currentPage === p ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentPage(p)}
+              className="w-8 px-0"
+            >
+              {p}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
       {/* User Detail Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-[500px] overflow-y-auto">
+        <SheetContent className="w-[560px] overflow-y-auto">
           {selectedUser && (
             <>
               <SheetHeader>
-                <SheetTitle>User Details</SheetTitle>
+                <SheetTitle>User Details — {selectedUser.id}</SheetTitle>
               </SheetHeader>
-              <div className="mt-6 space-y-6">
-                {/* Risk Alert */}
+              <div className="mt-6">
                 {selectedUser.riskLevel === "high" && (
-                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                  <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-destructive" />
                       <p className="text-sm font-medium text-destructive">High Risk User</p>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      This user has been flagged for elevated risk monitoring
+                      Flagged for elevated risk monitoring
                     </p>
                   </div>
                 )}
 
-                {/* Profile Section */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Profile Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Full Name</p>
-                      <p className="font-medium">{selectedUser.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">User ID</p>
-                      <p className="font-medium">{selectedUser.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Phone</p>
-                      <p className="font-medium">{selectedUser.phone}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Email</p>
-                      <p className="font-medium">{selectedUser.email}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Joined</p>
-                      <p className="font-medium">{selectedUser.created}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Risk Level</p>
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize",
-                        riskLevelColors[selectedUser.riskLevel as keyof typeof riskLevelColors]
-                      )}>
-                        {selectedUser.riskLevel}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                <Tabs defaultValue="profile" className="space-y-4">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="profile" className="flex-1">Profile</TabsTrigger>
+                    <TabsTrigger value="kyc" className="flex-1">KYC</TabsTrigger>
+                    <TabsTrigger value="wallets" className="flex-1">Wallets</TabsTrigger>
+                    <TabsTrigger value="activity" className="flex-1">Activity</TabsTrigger>
+                    <TabsTrigger value="notes" className="flex-1">Notes</TabsTrigger>
+                  </TabsList>
 
-                {/* Status Section */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Account Status
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">KYC Status</p>
-                      <StatusBadge
-                        status={
-                          selectedUser.kyc === "verified"
-                            ? "success"
-                            : selectedUser.kyc === "pending"
-                            ? "warning"
-                            : "error"
-                        }
-                      >
-                        {selectedUser.kyc}
-                      </StatusBadge>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Wallet Status</p>
-                      <StatusBadge
-                        status={selectedUser.wallet === "active" ? "success" : "error"}
-                      >
-                        {selectedUser.wallet}
-                      </StatusBadge>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Wallet Section */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Wallet Information
-                  </h4>
-                  <div className="rounded-lg border border-border p-4">
-                    <div className="flex items-center justify-between">
+                  {/* Profile Tab */}
+                  <TabsContent value="profile" className="space-y-5">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><p className="text-xs text-muted-foreground">Full Name</p><p className="font-medium">{selectedUser.name}</p></div>
+                      <div><p className="text-xs text-muted-foreground">User ID</p><p className="font-medium font-mono text-sm">{selectedUser.id}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Phone</p><p className="font-medium">{selectedUser.phone}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Email</p><p className="font-medium">{selectedUser.email}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Joined</p><p className="font-medium">{selectedUser.created}</p></div>
+                      <div><p className="text-xs text-muted-foreground">Tier</p><p className="font-medium">{selectedUser.tier}</p></div>
                       <div>
-                        <p className="text-xs text-muted-foreground">NGN Balance</p>
-                        <p className="text-xl font-semibold">{selectedUser.balance}</p>
+                        <p className="text-xs text-muted-foreground">Risk Level</p>
+                        <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium capitalize mt-1", riskLevelColors[selectedUser.riskLevel as keyof typeof riskLevelColors])}>
+                          {selectedUser.riskLevel}
+                        </span>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted-foreground">USDT Balance</p>
-                        <p className="text-xl font-semibold">2,450.00</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Admin Controls */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Admin Controls
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
                       <div>
-                        <Label>Withdrawals Enabled</Label>
-                        <p className="text-xs text-muted-foreground">Allow user to make withdrawals</p>
+                        <p className="text-xs text-muted-foreground">KYC Status</p>
+                        <div className="mt-1">
+                          <StatusBadge status={selectedUser.kyc === "verified" ? "success" : selectedUser.kyc === "pending" ? "warning" : "error"}>
+                            {selectedUser.kyc}
+                          </StatusBadge>
+                        </div>
                       </div>
-                      <Switch checked={selectedUser.withdrawalsEnabled} />
                     </div>
-                  </div>
-                </div>
 
-                {/* Admin Notes */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Admin Notes
-                  </h4>
-                  <Textarea
-                    placeholder="Add notes about this user..."
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    rows={4}
-                  />
-                  <Button variant="outline" size="sm">Save Notes</Button>
-                </div>
+                    {/* Admin Controls */}
+                    <div className="border-t border-border pt-4 space-y-4">
+                      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Admin Controls</p>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label>Withdrawals Enabled</Label>
+                          <p className="text-xs text-muted-foreground">Allow user to make withdrawals</p>
+                        </div>
+                        <Switch checked={selectedUser.withdrawalsEnabled} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label>Risk Level</Label>
+                          <p className="text-xs text-muted-foreground">Set risk classification</p>
+                        </div>
+                        <Select defaultValue={selectedUser.riskLevel}>
+                          <SelectTrigger className="w-28">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">Low</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="high">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
-                {/* Actions */}
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" className="flex-1">
-                    <UserX className="mr-2 h-4 w-4" />
-                    {selectedUser.wallet === "frozen" ? "Unfreeze" : "Freeze"} All Wallets
-                  </Button>
-                  <Button variant="destructive" className="flex-1">
-                    <Flag className="mr-2 h-4 w-4" />
-                    Flag User
-                  </Button>
-                </div>
+                    <div className="flex gap-3">
+                      <Button variant="outline" className="flex-1">
+                        <UserX className="mr-2 h-4 w-4" />
+                        {selectedUser.wallet === "frozen" ? "Unfreeze" : "Freeze"} Wallets
+                      </Button>
+                      <Button variant="outline" className="flex-1">
+                        Force Re-KYC
+                      </Button>
+                      <Button variant="destructive">
+                        <Flag className="mr-2 h-4 w-4" />
+                        Flag
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center">All actions logged to Audit Trail</p>
+                  </TabsContent>
+
+                  {/* KYC Tab */}
+                  <TabsContent value="kyc" className="space-y-4">
+                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">KYC Information (Read-only)</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div><p className="text-xs text-muted-foreground">BVN</p><p className="font-mono font-medium">{selectedUser.bvn}</p></div>
+                      <div><p className="text-xs text-muted-foreground">NIN</p><p className="font-mono font-medium">{selectedUser.nin ?? "Not provided"}</p></div>
+                      <div><p className="text-xs text-muted-foreground">ID Type</p><p className="font-medium">{selectedUser.idType}</p></div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">VerifyMe Score</p>
+                        {selectedUser.verifyMeScore !== null ? (
+                          <p className={cn("font-bold text-lg", selectedUser.verifyMeScore >= 80 ? "text-success" : selectedUser.verifyMeScore >= 50 ? "text-warning" : "text-destructive")}>
+                            {selectedUser.verifyMeScore}%
+                          </p>
+                        ) : <p className="text-muted-foreground">Awaiting</p>}
+                      </div>
+                    </div>
+                    <div className={cn("rounded-lg border p-4", selectedUser.kyc === "verified" ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5")}>
+                      <p className="text-sm font-medium">KYC Status: {selectedUser.kyc.toUpperCase()}</p>
+                    </div>
+                  </TabsContent>
+
+                  {/* Wallets Tab */}
+                  <TabsContent value="wallets" className="space-y-4">
+                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Wallet Balances</p>
+                    <div className="rounded-lg border border-primary/30 bg-primary/5 p-4">
+                      <p className="text-xs text-muted-foreground">Total Balance (USDT Equivalent)</p>
+                      <p className="text-2xl font-bold text-success">{selectedUser.balanceUsdtEquiv}</p>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-lg border border-border p-3 text-center">
+                        <p className="text-xs text-muted-foreground">NGN Wallet</p>
+                        <p className="font-semibold mt-1">{selectedUser.balanceNgn}</p>
+                      </div>
+                      <div className="rounded-lg border border-border p-3 text-center">
+                        <p className="text-xs text-muted-foreground">USDT Wallet</p>
+                        <p className="font-semibold mt-1">{selectedUser.balanceUsdt}</p>
+                      </div>
+                      <div className="rounded-lg border border-border p-3 text-center">
+                        <p className="text-xs text-muted-foreground">USDC Wallet</p>
+                        <p className="font-semibold mt-1">{selectedUser.balanceUsdc}</p>
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Activity Tab */}
+                  <TabsContent value="activity" className="space-y-4">
+                    <Tabs defaultValue="deposits">
+                      <TabsList className="w-full">
+                        <TabsTrigger value="deposits" className="flex-1">Deposits</TabsTrigger>
+                        <TabsTrigger value="withdrawals" className="flex-1">Withdrawals</TabsTrigger>
+                        <TabsTrigger value="swaps" className="flex-1">Swaps</TabsTrigger>
+                        <TabsTrigger value="provider" className="flex-1">Provider</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="deposits">
+                        <p className="text-sm text-muted-foreground py-8 text-center">Recent deposit history for this user</p>
+                      </TabsContent>
+                      <TabsContent value="withdrawals">
+                        <p className="text-sm text-muted-foreground py-8 text-center">Recent withdrawal history for this user</p>
+                      </TabsContent>
+                      <TabsContent value="swaps">
+                        <p className="text-sm text-muted-foreground py-8 text-center">Recent swap history for this user</p>
+                      </TabsContent>
+                      <TabsContent value="provider">
+                        <p className="text-sm text-muted-foreground py-8 text-center">OpenXSwitch & Yellow Card events for this user</p>
+                      </TabsContent>
+                    </Tabs>
+                  </TabsContent>
+
+                  {/* Notes Tab */}
+                  <TabsContent value="notes" className="space-y-4">
+                    {selectedUser.adminNotes && (
+                      <div className="rounded-lg bg-muted/50 p-4">
+                        <p className="text-xs text-muted-foreground mb-1">Previous note</p>
+                        <p className="text-sm">{selectedUser.adminNotes}</p>
+                      </div>
+                    )}
+                    <Textarea
+                      placeholder="Add admin note about this user..."
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      rows={4}
+                    />
+                    <Button variant="outline" size="sm">Save Note</Button>
+                    <p className="text-xs text-muted-foreground">Notes are logged to Audit Trail</p>
+                  </TabsContent>
+                </Tabs>
               </div>
             </>
           )}
