@@ -10,12 +10,9 @@ import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
 import Users from "@/pages/Users";
 import Wallets from "@/pages/Wallets";
-import WalletArchitecture from "@/pages/WalletArchitecture";
-import CustomerWallets from "@/pages/CustomerWallets";
 import OxsSend from "@/pages/OxsSend";
 import OxsReceive from "@/pages/OxsReceive";
 import OxsSwap from "@/pages/OxsSwap";
-import YellowCardOnOffRamp from "@/pages/YellowCardOnOffRamp";
 import Deposits from "@/pages/Deposits";
 import Withdrawals from "@/pages/Withdrawals";
 import Rates from "@/pages/Rates";
@@ -42,12 +39,9 @@ function AppRoutes() {
         <Route path="/" element={<ProtectedRoute element={<Dashboard />} />} />
         <Route path="/users" element={<ProtectedRoute element={<Users />} />} />
         <Route path="/wallets" element={<ProtectedRoute element={<Wallets />} />} />
-        <Route path="/wallet-architecture" element={<ProtectedRoute element={<WalletArchitecture />} />} />
-        <Route path="/customer-wallets" element={<ProtectedRoute element={<CustomerWallets />} />} />
         <Route path="/oxs-send" element={<ProtectedRoute element={<OxsSend />} />} />
         <Route path="/oxs-receive" element={<ProtectedRoute element={<OxsReceive />} />} />
         <Route path="/oxs-swap" element={<ProtectedRoute element={<OxsSwap />} />} />
-        <Route path="/yc-onofframp" element={<ProtectedRoute element={<YellowCardOnOffRamp />} />} />
         <Route path="/deposits" element={<ProtectedRoute element={<Deposits />} />} />
         <Route path="/withdrawals" element={<ProtectedRoute element={<Withdrawals />} />} />
         <Route path="/rates" element={<ProtectedRoute element={<Rates />} />} />
