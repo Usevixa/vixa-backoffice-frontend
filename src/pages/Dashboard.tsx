@@ -1,83 +1,128 @@
+import { useState } from "react";
 import {
   Users,
   ShieldCheck,
-  ArrowUpRight,
   ArrowDownLeft,
+  ArrowUpRight,
   RefreshCw,
   AlertTriangle,
   TrendingUp,
+  Wallet,
+  Clock,
 } from "lucide-react";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { AlertCard } from "@/components/dashboard/AlertCard";
 import { TransactionChart } from "@/components/dashboard/TransactionChart";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const durationLabels: Record<string, string> = {
+  today: "Today",
+  "24h": "Last 24 hours",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+  "90d": "Last 90 days",
+  all: "All Time",
+};
 
 export default function Dashboard() {
+  const [duration, setDuration] = useState("24h");
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-description">
-          Overview of VIXA platform metrics and operations
-        </p>
+      <div className="flex items-center justify-between page-header">
+        <div>
+          <h1 className="page-title">Dashboard</h1>
+          <p className="page-description">
+            VIXA platform overview — {durationLabels[duration]}
+          </p>
+        </div>
+        {/* Duration Selector */}
+        <Select value={duration} onValueChange={setDuration}>
+          <SelectTrigger className="w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="24h">24h</SelectItem>
+            <SelectItem value="7d">7 Days</SelectItem>
+            <SelectItem value="30d">30 Days</SelectItem>
+            <SelectItem value="90d">90 Days</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* KPI Cards - SEND / RECEIVE / SWAP */}
+      {/* KPI Row 1 — Primary Money Flow */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
-          title="SEND Volume (24h)"
-          value="₦85.2M"
-          change="847 transfers"
-          changeType="neutral"
-          icon={ArrowUpRight}
-          iconColor="text-primary"
-        />
-        <MetricCard
-          title="RECEIVE Volume (24h)"
-          value="₦60.0M"
+          title="Deposits Volume"
+          value="83,420 USDT"
           change="512 deposits"
           changeType="neutral"
           icon={ArrowDownLeft}
           iconColor="text-success"
         />
         <MetricCard
-          title="SWAP Volume (24h)"
-          value="₦42.5M"
+          title="Withdrawals Volume"
+          value="71,050 USDT"
+          change="847 withdrawals"
+          changeType="neutral"
+          icon={ArrowUpRight}
+          iconColor="text-primary"
+        />
+        <MetricCard
+          title="Swaps Volume"
+          value="41,750 USDT"
           change="288 swaps"
           changeType="neutral"
           icon={RefreshCw}
           iconColor="text-warning"
         />
         <MetricCard
-          title="Revenue (Markup)"
-          value="₦2.34M"
-          change="+15.7% from last month"
+          title="Markup Revenue"
+          value="2,340 USDT"
+          change="+15.7% from last period"
           changeType="positive"
           icon={TrendingUp}
           iconColor="text-success"
         />
       </div>
 
-      {/* Secondary Metrics */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* KPI Row 2 — Platform Health */}
+      <div className="grid gap-4 md:grid-cols-5">
         <MetricCard
           title="Total Users"
           value="12,847"
-          change="+8.2% from last month"
+          change="+8.2% this period"
           changeType="positive"
           icon={Users}
         />
         <MetricCard
           title="Verified Users"
           value="9,234"
-          change="71.8% verification rate"
+          change="71.8% rate"
           changeType="neutral"
           icon={ShieldCheck}
           iconColor="text-success"
         />
         <MetricCard
-          title="Failed Transfers (24h)"
+          title="Total Wallet Value"
+          value="650,215 USDT"
+          change="NGN + USDT + USDC equiv"
+          changeType="neutral"
+          icon={Wallet}
+          iconColor="text-primary"
+        />
+        <MetricCard
+          title="Failed Transactions"
           value="23"
           change="0.8% failure rate"
           changeType="negative"
@@ -85,11 +130,11 @@ export default function Dashboard() {
           iconColor="text-destructive"
         />
         <MetricCard
-          title="Pending Payouts"
+          title="Pending Withdrawals"
           value="47"
-          change="₦8.4M queued"
+          change="8,400 USDT queued"
           changeType="neutral"
-          icon={RefreshCw}
+          icon={Clock}
           iconColor="text-warning"
         />
       </div>
@@ -98,29 +143,29 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-4">
         <AlertCard
           type="error"
-          title="3 Stuck Payouts"
-          description="Payouts pending >30 mins"
+          title="3 Withdrawals Stuck"
+          description="Pending >30 min — SLA breach"
           action="Investigate"
           onAction={() => {}}
         />
         <AlertCard
           type="warning"
           title="5 Webhook Failures"
-          description="OpenXSwitch: 3, Yellow Card: 2"
+          description="Yellow Card: 3, OpenXSwitch: 2"
           action="View Logs"
           onAction={() => {}}
         />
         <AlertCard
           type="info"
-          title="2 High-Risk Users"
-          description="Flagged for review"
+          title="KYC Queue Backlog"
+          description="8 pending reviews"
           action="Review"
           onAction={() => {}}
         />
         <AlertCard
           type="warning"
-          title="4 Recon Mismatches"
-          description="Settlement exceptions found"
+          title="Swap Imbalance"
+          description="2 debits without matching credits"
           action="Reconcile"
           onAction={() => {}}
         />

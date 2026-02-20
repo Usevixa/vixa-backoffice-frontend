@@ -1,4 +1,4 @@
-import { Bell, Search, User } from "lucide-react";
+import { Bell, Search, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,8 +9,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
+  const { adminName, adminRole, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-card px-6">
       {/* Search */}
@@ -19,8 +29,8 @@ export function Header() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search users, transactions..."
-            className="w-80 pl-9"
+            placeholder="Search users, deposits, withdrawals, swaps, wallet IDs, provider refs..."
+            className="w-96 pl-9"
           />
         </div>
       </div>
@@ -41,15 +51,15 @@ export function Header() {
             <DropdownMenuLabel>Notifications</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="text-sm font-medium">5 pending KYC reviews</span>
+              <span className="text-sm font-medium">3 withdrawals stuck &gt;30 min (SLA breach)</span>
               <span className="text-xs text-muted-foreground">2 minutes ago</span>
             </DropdownMenuItem>
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="text-sm font-medium">Failed webhook detected</span>
+              <span className="text-sm font-medium">Yellow Card webhook failures spike</span>
               <span className="text-xs text-muted-foreground">15 minutes ago</span>
             </DropdownMenuItem>
             <DropdownMenuItem className="flex flex-col items-start gap-1 py-3">
-              <span className="text-sm font-medium">High-risk transaction flagged</span>
+              <span className="text-sm font-medium">Swap imbalance detected — SWP-003</span>
               <span className="text-xs text-muted-foreground">1 hour ago</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -63,18 +73,27 @@ export function Header() {
                 <User className="h-4 w-4 text-primary" />
               </div>
               <div className="hidden text-left md:block">
-                <p className="text-sm font-medium">Admin User</p>
-                <p className="text-xs text-muted-foreground">Super Admin</p>
+                <p className="text-sm font-medium">{adminName}</p>
+                <p className="text-xs text-muted-foreground">{adminRole}</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Shield className="mr-2 h-4 w-4" />
+              Security (2FA)
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">Log out</DropdownMenuItem>
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Log out
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
