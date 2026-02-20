@@ -29,7 +29,7 @@ export function Header() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search users, deposits, withdrawals, swaps, wallet IDs, provider refs..."
+            placeholder="Search users, sub-wallet ID, send/receive/swap ID, tx hash, YC/OXS ref..."
             className="w-96 pl-9"
           />
         </div>
