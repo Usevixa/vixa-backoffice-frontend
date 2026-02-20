@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { Search, Filter, ArrowUpRight, AlertTriangle, RefreshCw, Flag, CheckCircle, Clock } from "lucide-react";
+import {
+  Search, Filter, ArrowUpRight, AlertTriangle, RefreshCw, Flag, CheckCircle, Clock,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -21,110 +19,120 @@ const withdrawals = [
     id: "WDR-001",
     user: "Chinedu Okonkwo",
     userId: "USR-001",
+    subWallet: "SUB-00142",
     amountUsdt: "250.00 USDT",
-    destination: "Access Bank ***4521",
-    provider: "OpenXSwitch",
+    destination: "0xA4f2...3ac9 (Polygon)",
     status: "completed",
     ageMinutes: null,
     retryCount: 0,
-    providerRef: "OXS-WDR-7841234",
-    ledgerRef: "WAL-001",
+    oxsRef: "OXS-SND-7841234",
+    ycRef: "YC-WD-8847291",
+    ledgerRef: "LDG-DEBIT-001",
     webhookRef: "WH-001",
-    lastProviderResponse: "SUCCESS - bank credited",
+    lastProviderResponse: "YC: CONFIRMED — on-chain tx sent on Polygon",
     createdAt: "Dec 31, 2024 14:32",
     timeline: [
       { step: "INITIATED", done: true, time: "14:32:00" },
-      { step: "PROCESSING", done: true, time: "14:32:15" },
-      { step: "SETTLED", done: true, time: "14:34:12" },
-      { step: "COMPLETED", done: true, time: "14:34:30" },
+      { step: "OXS DEBITED / SENT", done: true, time: "14:32:15" },
+      { step: "YC PROCESSING", done: true, time: "14:32:40" },
+      { step: "SENT ON POLYGON", done: true, time: "14:33:55" },
+      { step: "CONFIRMED", done: true, time: "14:34:30" },
     ],
   },
   {
     id: "WDR-002",
     user: "Amara Eze",
     userId: "USR-002",
+    subWallet: "SUB-00089",
     amountUsdt: "175.00 USDT",
-    destination: "GTBank ***7891",
-    provider: "OpenXSwitch",
+    destination: "0xB9c1...de44 (Polygon)",
     status: "pending",
     ageMinutes: 8,
     retryCount: 0,
-    providerRef: "OXS-WDR-7841235",
-    ledgerRef: "WAL-003",
+    oxsRef: "OXS-SND-7841235",
+    ycRef: "YC-WD-5523891",
+    ledgerRef: "LDG-DEBIT-002",
     webhookRef: null,
-    lastProviderResponse: "PENDING - awaiting bank confirmation",
+    lastProviderResponse: "YC: PROCESSING — awaiting Polygon block confirmation",
     createdAt: "Dec 31, 2024 15:10",
     timeline: [
       { step: "INITIATED", done: true, time: "15:10:00" },
-      { step: "PROCESSING", done: true, time: "15:10:22" },
-      { step: "SETTLED", done: false, time: null },
-      { step: "COMPLETED", done: false, time: null },
+      { step: "OXS DEBITED / SENT", done: true, time: "15:10:22" },
+      { step: "YC PROCESSING", done: true, time: "15:10:50" },
+      { step: "SENT ON POLYGON", done: false, time: null },
+      { step: "CONFIRMED", done: false, time: null },
     ],
   },
   {
     id: "WDR-003",
     user: "Ibrahim Musa",
     userId: "USR-003",
+    subWallet: "SUB-00213",
     amountUsdt: "490.00 USDT",
-    destination: "First Bank ***2345",
-    provider: "OpenXSwitch",
+    destination: "0xC3a7...ff01 (Polygon)",
     status: "pending",
     ageMinutes: 35,
     retryCount: 1,
-    providerRef: "OXS-WDR-7841220",
-    ledgerRef: "WAL-005",
+    oxsRef: "OXS-SND-7841220",
+    ycRef: "YC-WD-9912345",
+    ledgerRef: "LDG-DEBIT-003",
     webhookRef: null,
-    lastProviderResponse: "TIMEOUT - bank did not respond within 30s",
+    lastProviderResponse: "YC: TIMEOUT — no block confirmation after 30s, retrying",
     createdAt: "Dec 31, 2024 14:43",
     timeline: [
       { step: "INITIATED", done: true, time: "14:43:00" },
-      { step: "PROCESSING", done: true, time: "14:43:18" },
-      { step: "SETTLED", done: false, time: null },
-      { step: "COMPLETED", done: false, time: null },
+      { step: "OXS DEBITED / SENT", done: true, time: "14:43:18" },
+      { step: "YC PROCESSING", done: true, time: "14:43:45" },
+      { step: "SENT ON POLYGON", done: false, time: null },
+      { step: "CONFIRMED", done: false, time: null },
     ],
   },
   {
     id: "WDR-004",
     user: "Emeka Nwosu",
     userId: "USR-005",
+    subWallet: "SUB-00301",
     amountUsdt: "1,180.00 USDT",
-    destination: "Zenith Bank ***6789",
-    provider: "OpenXSwitch",
+    destination: "0xD8b3...8Yk3 (Polygon)",
     status: "failed",
     ageMinutes: null,
     retryCount: 3,
-    providerRef: "OXS-WDR-7841199",
-    ledgerRef: "WAL-009",
+    oxsRef: "OXS-SND-7841199",
+    ycRef: "YC-WD-3312234",
+    ledgerRef: "LDG-DEBIT-004",
     webhookRef: "WH-003",
-    lastProviderResponse: "FAILED - bank account invalid",
+    lastProviderResponse: "YC: FAILED — destination address failed compliance check",
     createdAt: "Dec 31, 2024 10:22",
     timeline: [
       { step: "INITIATED", done: true, time: "10:22:00" },
-      { step: "PROCESSING", done: true, time: "10:22:30" },
-      { step: "SETTLED", done: false, time: null },
-      { step: "COMPLETED", done: false, time: null },
+      { step: "OXS DEBITED / SENT", done: true, time: "10:22:30" },
+      { step: "YC PROCESSING", done: true, time: "10:22:55" },
+      { step: "SENT ON POLYGON", done: false, time: null },
+      { step: "CONFIRMED", done: false, time: null },
     ],
   },
   {
     id: "WDR-005",
     user: "Ngozi Obi",
     userId: "USR-006",
+    subWallet: "SUB-00078",
     amountUsdt: "310.00 USDT",
-    destination: "MTN MoMo ***0801",
-    provider: "OpenXSwitch",
+    destination: "0xE1f9...mN2p (Polygon)",
     status: "completed",
     ageMinutes: null,
     retryCount: 0,
-    providerRef: "OXS-WDR-7841100",
-    ledgerRef: "WAL-003",
-    webhookRef: "WH-001",
-    lastProviderResponse: "SUCCESS - mobile money credited",
+    oxsRef: "OXS-SND-7841100",
+    ycRef: "YC-WD-5523880",
+    ledgerRef: "LDG-DEBIT-005",
+    webhookRef: "WH-005",
+    lastProviderResponse: "YC: CONFIRMED — on-chain tx sent on Polygon",
     createdAt: "Dec 30, 2024 16:45",
     timeline: [
       { step: "INITIATED", done: true, time: "16:45:00" },
-      { step: "PROCESSING", done: true, time: "16:45:20" },
-      { step: "SETTLED", done: true, time: "16:46:45" },
-      { step: "COMPLETED", done: true, time: "16:47:00" },
+      { step: "OXS DEBITED / SENT", done: true, time: "16:45:20" },
+      { step: "YC PROCESSING", done: true, time: "16:45:45" },
+      { step: "SENT ON POLYGON", done: true, time: "16:46:30" },
+      { step: "CONFIRMED", done: true, time: "16:47:05" },
     ],
   },
 ];
@@ -157,10 +165,16 @@ export default function Withdrawals() {
   return (
     <div className="space-y-6">
       <div className="page-header">
-        <h1 className="page-title">Withdrawals</h1>
-        <p className="page-description">
-          Ops-critical view of all value leaving VIXA wallets via bank, mobile money, and stablecoin rails
-        </p>
+        <div>
+          <h1 className="page-title">Withdrawals (Network Out)</h1>
+          <p className="page-description">
+            USDT (Polygon) withdrawals: OpenXSwitch debit → Yellow Card → destination address
+          </p>
+        </div>
+        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
+          Fixed route: OXS → Yellow Card → Polygon · Asset: USDT
+        </div>
       </div>
 
       {/* Stats */}
@@ -224,22 +238,10 @@ export default function Withdrawals() {
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input type="search" placeholder="Search withdrawal ID, user, provider ref..." className="pl-9" />
+              <Input type="search" placeholder="Search withdrawal ID, sub-wallet, OXS ref, YC ref..." className="pl-9" />
             </div>
             <Select defaultValue="all">
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Provider" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Providers</SelectItem>
-                <SelectItem value="openxswitch">OpenXSwitch</SelectItem>
-                <SelectItem value="yellowcard">Yellow Card</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select defaultValue="all">
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
+              <SelectTrigger className="w-40"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="pending">Pending</SelectItem>
@@ -249,7 +251,6 @@ export default function Withdrawals() {
             </Select>
             <Button variant="outline" size="icon"><Filter className="h-4 w-4" /></Button>
           </div>
-
           <WithdrawalsTable withdrawals={withdrawals} onSelect={(w) => { setSelectedWdr(w); setSheetOpen(true); }} showSla={false} />
         </TabsContent>
 
@@ -258,10 +259,9 @@ export default function Withdrawals() {
           <div className="flex gap-2 flex-wrap">
             <Button size="sm" variant="outline">&gt;30 min</Button>
             <Button size="sm" variant="outline">Failed last 2h</Button>
-            <Button size="sm" variant="outline">OpenXSwitch</Button>
-            <Button size="sm" variant="outline">Yellow Card</Button>
+            <Button size="sm" variant="outline">OXS Stage</Button>
+            <Button size="sm" variant="outline">YC Stage</Button>
           </div>
-
           <WithdrawalsTable
             withdrawals={pending}
             onSelect={(w) => { setSelectedWdr(w); setSheetOpen(true); }}
@@ -272,7 +272,7 @@ export default function Withdrawals() {
 
       {/* Withdrawal Detail Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-[540px] overflow-y-auto">
+        <SheetContent className="w-[560px] overflow-y-auto">
           {selectedWdr && (
             <>
               <SheetHeader>
@@ -281,7 +281,8 @@ export default function Withdrawals() {
               <div className="mt-6 space-y-6">
                 {/* Amount + Status */}
                 <div className="rounded-lg border border-border p-4 text-center">
-                  <p className="text-3xl font-bold">{selectedWdr.amountUsdt}</p>
+                  <p className="text-xs text-muted-foreground">Amount</p>
+                  <p className="text-3xl font-bold mt-1">{selectedWdr.amountUsdt}</p>
                   <p className="text-sm text-muted-foreground mt-1">→ {selectedWdr.destination}</p>
                   <div className="mt-2">
                     <StatusBadge status={statusConfig[selectedWdr.status as keyof typeof statusConfig]}>
@@ -290,40 +291,61 @@ export default function Withdrawals() {
                   </div>
                 </div>
 
-                {/* Timeline */}
+                {/* Full Timeline including handoff point */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Status Timeline</h4>
-                  {selectedWdr.timeline.map((t, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className={cn(
-                        "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
-                        t.done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
-                      )}>
-                        {t.done ? "✓" : i + 1}
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Full Status Timeline</h4>
+                  <div className="text-xs text-muted-foreground mb-2">OXS debit → YC processing → Polygon confirmation</div>
+                  {selectedWdr.timeline.map((t, i) => {
+                    const isHandoff = t.step === "YC PROCESSING";
+                    return (
+                      <div key={i}>
+                        {isHandoff && (
+                          <div className="flex items-center gap-2 my-2">
+                            <div className="flex-1 h-px bg-border" />
+                            <span className="text-xs text-warning font-medium px-2 py-0.5 rounded bg-warning/10">OXS → YC Handoff</span>
+                            <div className="flex-1 h-px bg-border" />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
+                            t.done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
+                          )}>
+                            {t.done ? "✓" : i + 1}
+                          </div>
+                          <span className={cn("text-sm font-medium flex-1", t.done ? "text-foreground" : "text-muted-foreground")}>{t.step}</span>
+                          {t.time && <span className="text-xs text-muted-foreground font-mono">{t.time}</span>}
+                        </div>
                       </div>
-                      <span className={cn("text-sm font-medium flex-1", t.done ? "text-foreground" : "text-muted-foreground")}>
-                        {t.step}
-                      </span>
-                      {t.time && <span className="text-xs text-muted-foreground font-mono">{t.time}</span>}
+                    );
+                  })}
+                </div>
+
+                {/* Provider References */}
+                <div className="rounded-lg bg-muted/50 p-4 space-y-3">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Provider References</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">OXS Ref (debit/send)</span>
+                      <span className="font-mono text-sm font-medium text-primary">{selectedWdr.oxsRef}</span>
                     </div>
-                  ))}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Yellow Card Ref</span>
+                      <span className="font-mono text-sm font-medium text-warning">{selectedWdr.ycRef}</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Details */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Details</h4>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium">{selectedWdr.user}</p></div>
-                    <div><p className="text-xs text-muted-foreground">User ID</p><p className="font-mono text-sm font-medium">{selectedWdr.userId}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Provider</p><p className="font-medium">{selectedWdr.provider}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Retry Count</p><p className="font-medium">{selectedWdr.retryCount}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Provider Ref</p><p className="font-mono text-sm">{selectedWdr.providerRef}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Ledger Debit</p><p className="font-mono text-sm">{selectedWdr.ledgerRef}</p></div>
-                    {selectedWdr.webhookRef && (
-                      <div><p className="text-xs text-muted-foreground">Webhook Log</p><p className="font-mono text-sm text-primary">{selectedWdr.webhookRef}</p></div>
-                    )}
-                    <div><p className="text-xs text-muted-foreground">Created At</p><p className="font-medium">{selectedWdr.createdAt}</p></div>
-                  </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium">{selectedWdr.user}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Sub-wallet</p><p className="font-mono text-sm">{selectedWdr.subWallet}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Retry Count</p><p className="font-medium">{selectedWdr.retryCount}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Ledger Debit</p><p className="font-mono text-sm">{selectedWdr.ledgerRef}</p></div>
+                  {selectedWdr.webhookRef && (
+                    <div><p className="text-xs text-muted-foreground">Webhook Log</p><p className="font-mono text-sm text-primary">{selectedWdr.webhookRef}</p></div>
+                  )}
+                  <div><p className="text-xs text-muted-foreground">Created At</p><p className="font-medium">{selectedWdr.createdAt}</p></div>
                 </div>
 
                 {/* Provider Response */}
@@ -347,17 +369,14 @@ export default function Withdrawals() {
                 <div className="grid grid-cols-2 gap-3">
                   {selectedWdr.status === "failed" && (
                     <Button variant="outline">
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Retry
+                      <RefreshCw className="mr-2 h-4 w-4" /> Retry
                     </Button>
                   )}
                   <Button variant="outline">
-                    <Flag className="mr-2 h-4 w-4" />
-                    Escalate
+                    <Flag className="mr-2 h-4 w-4" /> Escalate
                   </Button>
                   <Button variant="outline" disabled={!adminNote}>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    Mark Resolved
+                    <CheckCircle className="mr-2 h-4 w-4" /> Mark Resolved
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground text-center">All actions are logged to the Audit Trail</p>
@@ -376,9 +395,8 @@ function WithdrawalsTable({
   showSla,
 }: {
   withdrawals: {
-    id: string; user: string; userId: string; amountUsdt: string;
-    destination: string; provider: string; status: string;
-    ageMinutes: number | null; createdAt: string;
+    id: string; user: string; userId: string; subWallet: string; amountUsdt: string;
+    destination: string; status: string; ageMinutes: number | null; createdAt: string;
   }[];
   onSelect: (w: any) => void;
   showSla: boolean;
@@ -389,12 +407,11 @@ function WithdrawalsTable({
         <thead>
           <tr>
             <th>Withdrawal ID</th>
-            <th>User</th>
+            <th>User / Sub-wallet</th>
             <th>Amount (USDT)</th>
             <th>Destination</th>
-            <th>Provider</th>
             <th>Status</th>
-            {showSla && <th>Age</th>}
+            {showSla && <th>Age (SLA)</th>}
             <th>Created At</th>
           </tr>
         </thead>
@@ -409,23 +426,15 @@ function WithdrawalsTable({
               )}
               onClick={() => onSelect(w)}
             >
-              <td className="font-mono text-sm font-medium">{w.id}</td>
+              <td className="font-mono text-sm font-medium text-primary">{w.id}</td>
               <td>
                 <div>
                   <p className="font-medium">{w.user}</p>
-                  <p className="text-xs text-muted-foreground">{w.userId}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{w.subWallet}</p>
                 </div>
               </td>
               <td className="font-semibold">{w.amountUsdt}</td>
-              <td className="text-muted-foreground text-sm">{w.destination}</td>
-              <td>
-                <span className={cn(
-                  "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
-                  w.provider === "OpenXSwitch" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
-                )}>
-                  {w.provider}
-                </span>
-              </td>
+              <td className="text-muted-foreground text-xs font-mono">{w.destination}</td>
               <td>
                 <StatusBadge status={statusConfig[w.status as keyof typeof statusConfig]}>
                   {w.status}
@@ -440,7 +449,7 @@ function WithdrawalsTable({
                   ) : <span className="text-muted-foreground">—</span>}
                 </td>
               )}
-              <td className="text-muted-foreground">{w.createdAt}</td>
+              <td className="text-muted-foreground text-sm">{w.createdAt}</td>
             </tr>
           ))}
         </tbody>
