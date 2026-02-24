@@ -64,42 +64,42 @@ const typeLabels = {
 
 export function RecentTransactions() {
   return (
-    <div className="content-card">
-      <div className="content-card-header">
+    <div className="content-card flex flex-col">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <h3 className="content-card-title">Recent Transactions</h3>
-        <a href="/transfers" className="text-sm text-primary hover:underline">
-          View all
+        <a href="/transfers" className="text-xs font-medium text-primary hover:underline">
+          View all →
         </a>
       </div>
-      <div className="divide-y divide-border">
+      <div className="divide-y divide-border flex-1">
         {transactions.map((tx) => {
           const Icon = typeIcons[tx.type as keyof typeof typeIcons];
           return (
             <div
               key={tx.id}
-              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+              className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/40 transition-colors"
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 <div
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-full",
+                    "flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0",
                     tx.type === "receive" && "bg-success/10 text-success",
                     tx.type === "send" && "bg-primary/10 text-primary",
                     tx.type === "swap" && "bg-warning/10 text-warning"
                   )}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3.5 w-3.5" />
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">{tx.user}</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-foreground truncate">{tx.user}</p>
                   <p className="text-xs text-muted-foreground">
-                    {typeLabels[tx.type as keyof typeof typeLabels]} • {tx.provider}
+                    {typeLabels[tx.type as keyof typeof typeLabels]} · {tx.provider}
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-medium">{tx.amount}</p>
-                <div className="flex items-center justify-end gap-2 mt-1">
+              <div className="text-right flex-shrink-0 ml-3">
+                <p className="text-sm font-semibold text-foreground">{tx.amount}</p>
+                <div className="flex items-center justify-end gap-2 mt-0.5">
                   <StatusBadge
                     status={
                       tx.status === "completed"
@@ -111,7 +111,7 @@ export function RecentTransactions() {
                   >
                     {tx.status}
                   </StatusBadge>
-                  <span className="text-xs text-muted-foreground">{tx.time}</span>
+                  <span className="text-[11px] text-muted-foreground">{tx.time}</span>
                 </div>
               </div>
             </div>
