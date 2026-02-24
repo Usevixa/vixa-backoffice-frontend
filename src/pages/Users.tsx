@@ -32,10 +32,13 @@ const users = [
     kyc: "verified",
     wallet: "active",
     riskLevel: "low",
-    balanceNgn: "₦2,450,000",
-    balanceUsdt: "2,450.50 USDT",
-    balanceUsdc: "0 USDC",
     balanceUsdtEquiv: "2,450.50 USDT",
+    tokenBalances: [
+      { coin: "USDT", balance: "1,200.00", icon: "💵" },
+      { coin: "SOL", balance: "12.45", icon: "◎" },
+      { coin: "ETH", balance: "0.85", icon: "⟠" },
+      { coin: "ADA", balance: "3,200.00", icon: "₳" },
+    ],
     created: "Dec 15, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
@@ -53,10 +56,12 @@ const users = [
     kyc: "pending",
     wallet: "active",
     riskLevel: "low",
-    balanceNgn: "₦890,000",
-    balanceUsdt: "875.00 USDT",
-    balanceUsdc: "0 USDC",
     balanceUsdtEquiv: "875.00 USDT",
+    tokenBalances: [
+      { coin: "USDT", balance: "500.00", icon: "💵" },
+      { coin: "SOL", balance: "3.20", icon: "◎" },
+      { coin: "USDC", balance: "125.00", icon: "🔵" },
+    ],
     created: "Dec 18, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
@@ -74,10 +79,15 @@ const users = [
     kyc: "verified",
     wallet: "frozen",
     riskLevel: "high",
-    balanceNgn: "₦5,670,000",
-    balanceUsdt: "5,500.00 USDT",
-    balanceUsdc: "0 USDC",
     balanceUsdtEquiv: "11,068.00 USDT",
+    tokenBalances: [
+      { coin: "USDT", balance: "5,500.00", icon: "💵" },
+      { coin: "ETH", balance: "2.10", icon: "⟠" },
+      { coin: "BTC", balance: "0.045", icon: "₿" },
+      { coin: "SOL", balance: "28.50", icon: "◎" },
+      { coin: "ADA", balance: "8,400.00", icon: "₳" },
+      { coin: "DOT", balance: "120.00", icon: "●" },
+    ],
     created: "Nov 22, 2024",
     withdrawalsEnabled: false,
     adminNotes: "Account frozen due to suspicious activity patterns. Under investigation.",
@@ -95,10 +105,10 @@ const users = [
     kyc: "failed",
     wallet: "active",
     riskLevel: "medium",
-    balanceNgn: "₦120,000",
-    balanceUsdt: "0 USDT",
-    balanceUsdc: "0 USDC",
     balanceUsdtEquiv: "117.80 USDT",
+    tokenBalances: [
+      { coin: "USDT", balance: "117.80", icon: "💵" },
+    ],
     created: "Dec 20, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
@@ -116,10 +126,14 @@ const users = [
     kyc: "verified",
     wallet: "active",
     riskLevel: "low",
-    balanceNgn: "₦15,890,000",
-    balanceUsdt: "15,600.00 USDT",
-    balanceUsdc: "0 USDC",
     balanceUsdtEquiv: "31,210.00 USDT",
+    tokenBalances: [
+      { coin: "USDT", balance: "15,600.00", icon: "💵" },
+      { coin: "SOL", balance: "85.00", icon: "◎" },
+      { coin: "ETH", balance: "3.20", icon: "⟠" },
+      { coin: "BTC", balance: "0.12", icon: "₿" },
+      { coin: "MATIC", balance: "4,500.00", icon: "⬡" },
+    ],
     created: "Oct 05, 2024",
     withdrawalsEnabled: true,
     adminNotes: "",
@@ -137,10 +151,12 @@ const users = [
     kyc: "verified",
     wallet: "active",
     riskLevel: "medium",
-    balanceNgn: "₦3,200,000",
-    balanceUsdt: "0 USDT",
-    balanceUsdc: "875.00 USDC",
     balanceUsdtEquiv: "4,018.45 USDT",
+    tokenBalances: [
+      { coin: "USDC", balance: "875.00", icon: "🔵" },
+      { coin: "SOL", balance: "22.30", icon: "◎" },
+      { coin: "ADA", balance: "5,100.00", icon: "₳" },
+    ],
     created: "Dec 01, 2024",
     withdrawalsEnabled: true,
     adminNotes: "High volume user — monitor transactions",
@@ -489,19 +505,17 @@ export default function Users() {
                       <p className="text-xs text-muted-foreground">Total Balance (USDT Equivalent)</p>
                       <p className="text-2xl font-bold text-success">{selectedUser.balanceUsdtEquiv}</p>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="rounded-lg border border-border p-3 text-center">
-                        <p className="text-xs text-muted-foreground">NGN Wallet</p>
-                        <p className="font-semibold mt-1">{selectedUser.balanceNgn}</p>
-                      </div>
-                      <div className="rounded-lg border border-border p-3 text-center">
-                        <p className="text-xs text-muted-foreground">USDT Wallet</p>
-                        <p className="font-semibold mt-1">{selectedUser.balanceUsdt}</p>
-                      </div>
-                      <div className="rounded-lg border border-border p-3 text-center">
-                        <p className="text-xs text-muted-foreground">USDC Wallet</p>
-                        <p className="font-semibold mt-1">{selectedUser.balanceUsdc}</p>
-                      </div>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mt-2">Token Balances</p>
+                    <div className="space-y-2">
+                      {selectedUser.tokenBalances.map((token) => (
+                        <div key={token.coin} className="flex items-center justify-between rounded-lg border border-border p-3">
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">{token.icon}</span>
+                            <span className="font-medium text-sm">{token.coin}</span>
+                          </div>
+                          <span className="font-semibold text-sm">{token.balance}</span>
+                        </div>
+                      ))}
                     </div>
                   </TabsContent>
 
@@ -512,7 +526,6 @@ export default function Users() {
                         <TabsTrigger value="deposits" className="flex-1">Deposits</TabsTrigger>
                         <TabsTrigger value="withdrawals" className="flex-1">Withdrawals</TabsTrigger>
                         <TabsTrigger value="swaps" className="flex-1">Swaps</TabsTrigger>
-                        <TabsTrigger value="provider" className="flex-1">Provider</TabsTrigger>
                       </TabsList>
                       <TabsContent value="deposits">
                         <p className="text-sm text-muted-foreground py-8 text-center">Recent deposit history for this user</p>
@@ -520,11 +533,25 @@ export default function Users() {
                       <TabsContent value="withdrawals">
                         <p className="text-sm text-muted-foreground py-8 text-center">Recent withdrawal history for this user</p>
                       </TabsContent>
-                      <TabsContent value="swaps">
-                        <p className="text-sm text-muted-foreground py-8 text-center">Recent swap history for this user</p>
-                      </TabsContent>
-                      <TabsContent value="provider">
-                        <p className="text-sm text-muted-foreground py-8 text-center">OpenXSwitch & Yellow Card events for this user</p>
+                      <TabsContent value="swaps" className="space-y-2 pt-2">
+                        {[
+                          { id: "SWP-041", from: "USDT", to: "SOL", amountIn: "500.00", amountOut: "3.42", status: "Completed", date: "Jan 12, 2025" },
+                          { id: "SWP-039", from: "SOL", to: "ETH", amountIn: "5.00", amountOut: "0.48", status: "Completed", date: "Jan 10, 2025" },
+                          { id: "SWP-035", from: "USDT", to: "ADA", amountIn: "200.00", amountOut: "580.00", status: "Completed", date: "Jan 8, 2025" },
+                          { id: "SWP-028", from: "ETH", to: "USDC", amountIn: "0.30", amountOut: "720.50", status: "Failed", date: "Jan 5, 2025" },
+                        ].map((swap) => (
+                          <div key={swap.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                            <div className="flex items-center gap-3">
+                              <span className="font-mono text-xs text-muted-foreground">{swap.id}</span>
+                              <span className="text-sm font-medium">{swap.from} → {swap.to}</span>
+                            </div>
+                            <div className="flex items-center gap-4">
+                              <span className="text-xs text-muted-foreground">{swap.amountIn} {swap.from} → {swap.amountOut} {swap.to}</span>
+                              <StatusBadge status={swap.status === "Completed" ? "success" : "error"}>{swap.status}</StatusBadge>
+                              <span className="text-xs text-muted-foreground">{swap.date}</span>
+                            </div>
+                          </div>
+                        ))}
                       </TabsContent>
                     </Tabs>
                   </TabsContent>
