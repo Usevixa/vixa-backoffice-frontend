@@ -507,7 +507,7 @@ export default function Users() {
                     </div>
                     <p className="text-xs text-muted-foreground uppercase tracking-wide font-semibold mt-2">Token Balances</p>
                     <div className="space-y-2">
-                      {selectedUser.tokenBalances.map((token) => (
+                      {(selectedUser.tokenBalances ?? []).map((token) => (
                         <div key={token.coin} className="flex items-center justify-between rounded-lg border border-border p-3">
                           <div className="flex items-center gap-3">
                             <span className="text-lg">{token.icon}</span>
