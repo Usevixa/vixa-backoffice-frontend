@@ -21,6 +21,7 @@ const receiveEvents = [
     source: "YC-DEP-001 (Yellow Card)",
     asset: "USDT",
     amountUsdt: "240.50 USDT",
+    txType: "On-Ramp",
     status: "credited",
     providerRef: "OXS-RCV-8847291",
     ledgerCredit: "LDG-CREDIT-001",
@@ -39,6 +40,7 @@ const receiveEvents = [
     source: "YC-DEP-002 (Yellow Card)",
     asset: "USDT",
     amountUsdt: "175.00 USDT",
+    txType: "On-Ramp",
     status: "credited",
     providerRef: "OXS-RCV-5523891",
     ledgerCredit: "LDG-CREDIT-002",
@@ -57,6 +59,7 @@ const receiveEvents = [
     source: "External wallet 0x7a3...e91f",
     asset: "USDC",
     amountUsdt: "490.00 USDT",
+    txType: "On-Chain",
     status: "confirmed",
     providerRef: "OXS-RCV-9912345",
     ledgerCredit: null,
@@ -72,9 +75,10 @@ const receiveEvents = [
     id: "RCV-004",
     toWallet: "SUB-00301",
     toUser: "Emeka Nwosu",
-    source: "YC-DEP-003 (Yellow Card)",
+    source: "SUB-00078 (Internal)",
     asset: "USDT",
     amountUsdt: "118.00 USDT",
+    txType: "Internal",
     status: "failed",
     providerRef: "OXS-RCV-5231987",
     ledgerCredit: null,
@@ -94,6 +98,7 @@ const receiveEvents = [
     source: "YC-DEP-004 (Yellow Card)",
     asset: "USDC",
     amountUsdt: "305.00 USDT",
+    txType: "On-Ramp",
     status: "credited",
     providerRef: "OXS-RCV-5523880",
     ledgerCredit: "LDG-CREDIT-005",
@@ -117,6 +122,12 @@ const statusConfig = {
 const assetColors: Record<string, string> = {
   USDT: "bg-primary/10 text-primary",
   USDC: "bg-warning/10 text-warning",
+};
+
+const txTypeColors: Record<string, string> = {
+  "On-Chain": "bg-primary/10 text-primary",
+  "On-Ramp": "bg-success/10 text-success",
+  "Internal": "bg-muted text-muted-foreground",
 };
 
 export default function OxsReceive() {
@@ -175,12 +186,23 @@ export default function OxsReceive() {
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="Asset" />
+            <SelectValue placeholder="Coin" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Assets</SelectItem>
+            <SelectItem value="all">All Coins</SelectItem>
             <SelectItem value="usdt">USDT</SelectItem>
             <SelectItem value="usdc">USDC</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Tx Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tx Types</SelectItem>
+            <SelectItem value="on-chain">On-Chain</SelectItem>
+            <SelectItem value="on-ramp">On-Ramp</SelectItem>
+            <SelectItem value="internal">Internal</SelectItem>
           </SelectContent>
         </Select>
         <Select defaultValue="all">
@@ -206,7 +228,8 @@ export default function OxsReceive() {
               <th>Receive Event ID</th>
               <th>To Sub-wallet</th>
               <th>Source</th>
-              <th>Asset</th>
+              <th>Coin</th>
+              <th>Transaction Type</th>
               <th>Amount (USDT)</th>
               <th>Status</th>
               <th>Provider Ref</th>
@@ -232,6 +255,11 @@ export default function OxsReceive() {
                 <td>
                   <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", assetColors[rcv.asset] ?? "bg-muted text-muted-foreground")}>
                     {rcv.asset}
+                  </span>
+                </td>
+                <td>
+                  <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", txTypeColors[rcv.txType] ?? "bg-muted text-muted-foreground")}>
+                    {rcv.txType}
                   </span>
                 </td>
                 <td className="font-semibold text-success">{rcv.amountUsdt}</td>
@@ -266,10 +294,13 @@ export default function OxsReceive() {
                 <div className="rounded-lg border border-border p-4 text-center">
                   <p className="text-3xl font-bold text-success">{selectedReceive.amountUsdt}</p>
                   <p className="text-sm text-muted-foreground mt-1">{selectedReceive.asset} → {selectedReceive.toWallet}</p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center justify-center gap-2">
                     <StatusBadge status={statusConfig[selectedReceive.status as keyof typeof statusConfig]}>
                       {selectedReceive.status.toUpperCase()}
                     </StatusBadge>
+                    <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", txTypeColors[selectedReceive.txType])}>
+                      {selectedReceive.txType}
+                    </span>
                   </div>
                 </div>
 
@@ -310,7 +341,8 @@ export default function OxsReceive() {
                     <div><p className="text-xs text-muted-foreground">To Sub-wallet</p><p className="font-mono text-sm font-medium">{selectedReceive.toWallet}</p></div>
                     <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium">{selectedReceive.toUser}</p></div>
                     <div className="col-span-2"><p className="text-xs text-muted-foreground">Source</p><p className="font-medium text-sm">{selectedReceive.source}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Asset</p><p className="font-medium">{selectedReceive.asset}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Coin</p><p className="font-medium">{selectedReceive.asset}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Transaction Type</p><p className="font-medium">{selectedReceive.txType}</p></div>
                     <div><p className="text-xs text-muted-foreground">Provider Ref</p><p className="font-mono text-sm">{selectedReceive.providerRef}</p></div>
                     {selectedReceive.ledgerCredit && (
                       <div><p className="text-xs text-muted-foreground">Ledger Credit</p><p className="font-mono text-sm text-success">{selectedReceive.ledgerCredit}</p></div>

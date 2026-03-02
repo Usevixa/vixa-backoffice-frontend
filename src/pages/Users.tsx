@@ -519,41 +519,51 @@ export default function Users() {
                     </div>
                   </TabsContent>
 
-                  {/* Activity Tab */}
-                  <TabsContent value="activity" className="space-y-4">
-                    <Tabs defaultValue="deposits">
-                      <TabsList className="w-full">
-                        <TabsTrigger value="deposits" className="flex-1">Deposits</TabsTrigger>
-                        <TabsTrigger value="withdrawals" className="flex-1">Withdrawals</TabsTrigger>
-                        <TabsTrigger value="swaps" className="flex-1">Swaps</TabsTrigger>
-                      </TabsList>
-                      <TabsContent value="deposits">
-                        <p className="text-sm text-muted-foreground py-8 text-center">Recent deposit history for this user</p>
-                      </TabsContent>
-                      <TabsContent value="withdrawals">
-                        <p className="text-sm text-muted-foreground py-8 text-center">Recent withdrawal history for this user</p>
-                      </TabsContent>
-                      <TabsContent value="swaps" className="space-y-2 pt-2">
-                        {[
-                          { id: "SWP-041", from: "USDT", to: "SOL", amountIn: "500.00", amountOut: "3.42", status: "Completed", date: "Jan 12, 2025" },
-                          { id: "SWP-039", from: "SOL", to: "ETH", amountIn: "5.00", amountOut: "0.48", status: "Completed", date: "Jan 10, 2025" },
-                          { id: "SWP-035", from: "USDT", to: "ADA", amountIn: "200.00", amountOut: "580.00", status: "Completed", date: "Jan 8, 2025" },
-                          { id: "SWP-028", from: "ETH", to: "USDC", amountIn: "0.30", amountOut: "720.50", status: "Failed", date: "Jan 5, 2025" },
-                        ].map((swap) => (
-                          <div key={swap.id} className="flex items-center justify-between rounded-lg border border-border p-3">
-                            <div className="flex items-center gap-3">
-                              <span className="font-mono text-xs text-muted-foreground">{swap.id}</span>
-                              <span className="text-sm font-medium">{swap.from} → {swap.to}</span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <span className="text-xs text-muted-foreground">{swap.amountIn} {swap.from} → {swap.amountOut} {swap.to}</span>
-                              <StatusBadge status={swap.status === "Completed" ? "success" : "error"}>{swap.status}</StatusBadge>
-                              <span className="text-xs text-muted-foreground">{swap.date}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </TabsContent>
-                    </Tabs>
+                  {/* Activity / Transaction History Tab */}
+                  <TabsContent value="activity" className="space-y-3">
+                    <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Transaction History</p>
+                    <div className="content-card overflow-hidden">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Tx Type</th>
+                            <th>Coin</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { date: "Jan 12", type: "Swap", txType: "Internal", coin: "USDT → SOL", amount: "500.00 USDT", status: "Completed" },
+                            { date: "Jan 10", type: "Send", txType: "On-Chain", coin: "SOL", amount: "5.00 SOL", status: "Confirmed" },
+                            { date: "Jan 8", type: "Deposit", txType: "On-Ramp", coin: "USDT", amount: "200.00 USDT", status: "Completed" },
+                            { date: "Jan 5", type: "Withdrawal", txType: "On-Chain", coin: "ETH", amount: "0.30 ETH", status: "Failed" },
+                            { date: "Jan 3", type: "Receive", txType: "On-Chain", coin: "USDC", amount: "720.50 USDT", status: "Credited" },
+                          ].map((tx, i) => (
+                            <tr key={i}>
+                              <td className="text-xs text-muted-foreground">{tx.date}</td>
+                              <td className="text-sm font-medium">{tx.type}</td>
+                              <td>
+                                <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
+                                  tx.txType === "On-Chain" ? "bg-primary/10 text-primary" :
+                                  tx.txType === "On-Ramp" ? "bg-success/10 text-success" :
+                                  "bg-muted text-muted-foreground"
+                                )}>{tx.txType}</span>
+                              </td>
+                              <td className="text-sm">{tx.coin}</td>
+                              <td className="font-semibold text-sm">{tx.amount}</td>
+                              <td>
+                                <StatusBadge status={
+                                  tx.status === "Completed" || tx.status === "Confirmed" || tx.status === "Credited" ? "success" : "error"
+                                }>{tx.status}</StatusBadge>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </TabsContent>
 
                   {/* Notes Tab */}
