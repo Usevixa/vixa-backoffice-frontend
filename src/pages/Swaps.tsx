@@ -18,17 +18,17 @@ const swaps = [
     id: "SWP-001",
     user: "Chinedu Okonkwo",
     userId: "USR-001",
-    fromCurrency: "NGN",
-    toCurrency: "USDT",
-    amountIn: "₦1,018,500",
-    amountOut: "1,000 USDT",
+    fromCoin: "USDT",
+    toCoin: "SOL",
+    amountIn: "1,000.00 USDT",
+    amountOut: "6.85 SOL",
     usdtEquiv: "1,000.00 USDT",
-    rateUsed: "₦1,018.50",
-    spread: "₦3,500",
+    rateUsed: "1 SOL = 145.99 USDT",
+    spread: "3.50 USDT",
     status: "completed",
     debitWallet: "WAL-001",
     creditWallet: "WAL-002",
-    providerRef: "YC-RATE-8847291",
+    providerRef: "OXS-RATE-8847291",
     timestamp: "Dec 31, 2024 14:32",
     timeline: [
       { step: "INITIATED", done: true, time: "14:32:00" },
@@ -40,17 +40,17 @@ const swaps = [
     id: "SWP-002",
     user: "Amara Eze",
     userId: "USR-002",
-    fromCurrency: "USDT",
-    toCurrency: "NGN",
-    amountIn: "500 USDT",
-    amountOut: "₦509,250",
+    fromCoin: "SOL",
+    toCoin: "USDC",
+    amountIn: "3.42 SOL",
+    amountOut: "499.50 USDC",
     usdtEquiv: "500.00 USDT",
-    rateUsed: "₦1,018.50",
-    spread: "₦1,750",
+    rateUsed: "1 SOL = 146.05 USDC",
+    spread: "1.75 USDT",
     status: "completed",
     debitWallet: "WAL-004",
     creditWallet: "WAL-003",
-    providerRef: "YC-RATE-5523891",
+    providerRef: "OXS-RATE-5523891",
     timestamp: "Dec 31, 2024 13:15",
     timeline: [
       { step: "INITIATED", done: true, time: "13:15:00" },
@@ -62,17 +62,17 @@ const swaps = [
     id: "SWP-003",
     user: "Ibrahim Musa",
     userId: "USR-003",
-    fromCurrency: "NGN",
-    toCurrency: "USDC",
-    amountIn: "₦2,037,000",
-    amountOut: "2,000 USDC",
-    usdtEquiv: "1,999.00 USDT",
-    rateUsed: "₦1,018.50",
-    spread: "₦7,000",
+    fromCoin: "USDT",
+    toCoin: "ETH",
+    amountIn: "2,000.00 USDT",
+    amountOut: "0.575 ETH",
+    usdtEquiv: "2,000.00 USDT",
+    rateUsed: "1 ETH = 3,478.26 USDT",
+    spread: "7.00 USDT",
     status: "rate_locked",
     debitWallet: "WAL-005",
     creditWallet: "WAL-006",
-    providerRef: "YC-RATE-9912345",
+    providerRef: "OXS-RATE-9912345",
     timestamp: "Dec 31, 2024 15:45",
     timeline: [
       { step: "INITIATED", done: true, time: "15:45:00" },
@@ -84,19 +84,19 @@ const swaps = [
     id: "SWP-004",
     user: "Emeka Nwosu",
     userId: "USR-005",
-    fromCurrency: "USDC",
-    toCurrency: "USDT",
+    fromCoin: "USDC",
+    toCoin: "USDT",
     amountIn: "1,000 USDC",
     amountOut: "999.50 USDT",
     usdtEquiv: "999.50 USDT",
-    rateUsed: "0.9995",
+    rateUsed: "1 USDC = 0.9995 USDT",
     spread: "0.50 USDT",
     status: "failed",
     debitWallet: "WAL-009",
     creditWallet: "WAL-009",
-    providerRef: "YC-RATE-3312234",
+    providerRef: "OXS-RATE-3312234",
     timestamp: "Dec 31, 2024 11:20",
-    failureReason: "Insufficient USDT liquidity on Yellow Card rail",
+    failureReason: "Insufficient USDT liquidity on settlement rail",
     timeline: [
       { step: "INITIATED", done: true, time: "11:20:00" },
       { step: "RATE_LOCKED", done: true, time: "11:20:04" },
@@ -126,14 +126,14 @@ export default function Swaps() {
   const completed = swaps.filter(s => s.status === "completed").length;
   const active = swaps.filter(s => s.status === "rate_locked" || s.status === "initiated").length;
   const failed = swaps.filter(s => s.status === "failed").length;
-  const totalSpread = "₦12,250";
+  const totalSpread = "12.75 USDT";
 
   return (
     <div className="space-y-6">
       <div className="page-header">
         <h1 className="page-title">Swaps</h1>
         <p className="page-description">
-          Internal value conversion (NGN ↔ USDT/USDC) — not market trading
+          Internal coin-to-coin conversion (USDT ↔ SOL, ETH, USDC, etc.) — not market trading
         </p>
       </div>
 
@@ -168,24 +168,26 @@ export default function Swaps() {
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="From Currency" />
+            <SelectValue placeholder="From Coin" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
-            <SelectItem value="ngn">NGN</SelectItem>
             <SelectItem value="usdt">USDT</SelectItem>
             <SelectItem value="usdc">USDC</SelectItem>
+            <SelectItem value="sol">SOL</SelectItem>
+            <SelectItem value="eth">ETH</SelectItem>
           </SelectContent>
         </Select>
         <Select defaultValue="all">
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="To Currency" />
+            <SelectValue placeholder="To Coin" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
-            <SelectItem value="ngn">NGN</SelectItem>
             <SelectItem value="usdt">USDT</SelectItem>
             <SelectItem value="usdc">USDC</SelectItem>
+            <SelectItem value="sol">SOL</SelectItem>
+            <SelectItem value="eth">ETH</SelectItem>
           </SelectContent>
         </Select>
         <Select defaultValue="all">
@@ -215,7 +217,7 @@ export default function Swaps() {
               <th>Amount Out</th>
               <th>USDT Equiv</th>
               <th>Rate Used</th>
-              <th>Spread</th>
+              <th>Spread (USDT)</th>
               <th>Status</th>
               <th>Timestamp</th>
             </tr>
@@ -237,11 +239,11 @@ export default function Swaps() {
                 <td>
                   <div className="flex items-center gap-1">
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
-                      {swap.fromCurrency}
+                      {swap.fromCoin}
                     </span>
                     <ArrowRight className="h-3 w-3 text-muted-foreground" />
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
-                      {swap.toCurrency}
+                      {swap.toCoin}
                     </span>
                   </div>
                 </td>
@@ -284,7 +286,7 @@ export default function Swaps() {
                       <p className="text-xl font-bold text-success">{selectedSwap.amountOut}</p>
                     </div>
                   </div>
-                  <p className="text-sm text-muted-foreground mt-2">≈ {selectedSwap.usdtEquiv} USDT equivalent</p>
+                  <p className="text-sm text-muted-foreground mt-2">≈ {selectedSwap.usdtEquiv} equivalent</p>
                   <div className="mt-2">
                     <StatusBadge status={statusBadgeMap[selectedSwap.status as keyof typeof statusBadgeMap]}>
                       {selectedSwap.status.replace("_", " ").toUpperCase()}
@@ -299,7 +301,7 @@ export default function Swaps() {
                     <div><p className="text-xs text-muted-foreground">Rate Used</p><p className="font-semibold">{selectedSwap.rateUsed}</p></div>
                     <div><p className="text-xs text-muted-foreground">Spread Earned</p><p className="font-semibold text-success">{selectedSwap.spread}</p></div>
                     <div><p className="text-xs text-muted-foreground">Provider Ref</p><p className="font-mono text-sm">{selectedSwap.providerRef}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Rate Source</p><p className="font-medium">Yellow Card</p></div>
+                    <div><p className="text-xs text-muted-foreground">Rate Source</p><p className="font-medium">OpenXSwitch</p></div>
                   </div>
                 </div>
 

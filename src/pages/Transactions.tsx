@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Filter, Download, ArrowUpRight, ArrowDownLeft, Gift, Banknote, X } from "lucide-react";
+import { Search, Filter, Download, ArrowUpRight, ArrowDownLeft, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,102 +18,99 @@ const transactions = [
     id: "TXN-20241231-001",
     user: "Chinedu Okonkwo",
     userId: "USR-001",
-    type: "buy",
-    amount: "₦250,000",
-    crypto: "245.50 USDT",
-    rate: "₦1,018.33/USDT",
+    country: "NG",
+    type: "deposit",
+    amountUsdt: "245.50 USDT",
+    fiatEquiv: "(~ ₦249,890)",
     status: "completed",
-    provider: "Quidax",
+    provider: "Yellow Card",
     timestamp: "Dec 31, 2024 14:32:15",
-    fee: "₦2,500",
-    reference: "QDX-8847291",
+    fee: "6.14 USDT",
+    reference: "YC-8847291",
   },
   {
     id: "TXN-20241231-002",
     user: "Amara Eze",
     userId: "USR-002",
-    type: "sell",
-    amount: "₦180,000",
-    crypto: "175.00 USDT",
-    rate: "₦1,028.57/USDT",
+    country: "KE",
+    type: "withdrawal",
+    amountUsdt: "175.00 USDT",
+    fiatEquiv: "(~ KES 24,150)",
     status: "completed",
-    provider: "YellowCard",
+    provider: "Yellow Card",
     timestamp: "Dec 31, 2024 13:45:22",
-    fee: "₦1,800",
+    fee: "3.50 USDT",
     reference: "YC-5523891",
   },
   {
     id: "TXN-20241231-003",
     user: "Ibrahim Musa",
     userId: "USR-003",
+    country: "GH",
     type: "withdrawal",
-    amount: "₦500,000",
-    crypto: "",
-    rate: "",
+    amountUsdt: "490.00 USDT",
+    fiatEquiv: "(~ GHS 7,742)",
     status: "pending",
-    provider: "Paystack",
+    provider: "OpenXSwitch",
     timestamp: "Dec 31, 2024 12:18:44",
-    fee: "₦100",
-    reference: "PS-7782134",
-    bank: "Access Bank - 0012345678",
+    fee: "9.80 USDT",
+    reference: "OXS-7782134",
   },
   {
     id: "TXN-20241231-004",
     user: "Folake Adeyemi",
     userId: "USR-004",
-    type: "gift_card",
-    amount: "₦75,000",
-    crypto: "$50 Amazon",
-    rate: "₦1,500/$1",
+    country: "ZA",
+    type: "swap",
+    amountUsdt: "500.00 USDT",
+    fiatEquiv: "",
     status: "completed",
-    provider: "Internal",
+    provider: "OpenXSwitch",
     timestamp: "Dec 31, 2024 11:05:33",
-    fee: "₦0",
-    reference: "GC-9923456",
+    fee: "1.50 USDT",
+    reference: "OXS-9923456",
   },
   {
     id: "TXN-20241231-005",
     user: "Emeka Nwosu",
     userId: "USR-005",
-    type: "buy",
-    amount: "₦1,200,000",
-    crypto: "1,180.00 USDT",
-    rate: "₦1,016.95/USDT",
+    country: "NG",
+    type: "deposit",
+    amountUsdt: "1,180.00 USDT",
+    fiatEquiv: "(~ ₦1,201,260)",
     status: "failed",
-    provider: "Quidax",
+    provider: "Yellow Card",
     timestamp: "Dec 31, 2024 10:22:18",
-    fee: "₦0",
-    reference: "QDX-8847290",
+    fee: "0 USDT",
+    reference: "YC-8847290",
     failureReason: "Insufficient liquidity at provider",
   },
   {
     id: "TXN-20241230-001",
     user: "Ngozi Obi",
     userId: "USR-006",
-    type: "sell",
-    amount: "₦320,000",
-    crypto: "310.00 USDT",
-    rate: "₦1,032.26/USDT",
+    country: "KE",
+    type: "withdrawal",
+    amountUsdt: "310.00 USDT",
+    fiatEquiv: "(~ KES 42,780)",
     status: "completed",
-    provider: "YellowCard",
+    provider: "Yellow Card",
     timestamp: "Dec 30, 2024 16:45:11",
-    fee: "₦3,200",
+    fee: "6.20 USDT",
     reference: "YC-5523880",
   },
 ];
 
 const typeIcons = {
-  buy: ArrowDownLeft,
-  sell: ArrowUpRight,
-  withdrawal: Banknote,
-  gift_card: Gift,
+  deposit: ArrowDownLeft,
+  withdrawal: ArrowUpRight,
+  swap: RefreshCw,
 };
 
 const typeLabels = {
-  buy: "Buy Crypto",
-  sell: "Sell Crypto",
+  deposit: "Deposit",
   withdrawal: "Withdrawal",
-  gift_card: "Gift Card",
+  swap: "Swap",
 };
 
 export default function Transactions() {
@@ -132,7 +129,7 @@ export default function Transactions() {
         <div className="page-header">
           <h1 className="page-title">Transactions</h1>
           <p className="page-description">
-            View and manage all platform transactions
+            View and manage all platform transactions — amounts in USDT
           </p>
         </div>
         <Button variant="outline">
@@ -157,10 +154,9 @@ export default function Transactions() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="buy">Buy Crypto</SelectItem>
-            <SelectItem value="sell">Sell Crypto</SelectItem>
+            <SelectItem value="deposit">Deposit</SelectItem>
             <SelectItem value="withdrawal">Withdrawal</SelectItem>
-            <SelectItem value="gift_card">Gift Card</SelectItem>
+            <SelectItem value="swap">Swap</SelectItem>
           </SelectContent>
         </Select>
         <Select defaultValue="all">
@@ -172,6 +168,18 @@ export default function Transactions() {
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="failed">Failed</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Country" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Countries</SelectItem>
+            <SelectItem value="NG">Nigeria</SelectItem>
+            <SelectItem value="KE">Kenya</SelectItem>
+            <SelectItem value="GH">Ghana</SelectItem>
+            <SelectItem value="ZA">South Africa</SelectItem>
           </SelectContent>
         </Select>
         <Input type="date" className="w-40" />
@@ -187,8 +195,9 @@ export default function Transactions() {
             <tr>
               <th>Transaction</th>
               <th>User</th>
-              <th>Amount</th>
-              <th>Rate</th>
+              <th>Country</th>
+              <th>Amount (USDT)</th>
+              <th>Fee</th>
               <th>Status</th>
               <th>Timestamp</th>
             </tr>
@@ -207,10 +216,9 @@ export default function Transactions() {
                       <div
                         className={cn(
                           "flex h-8 w-8 items-center justify-center rounded-full",
-                          tx.type === "buy" && "bg-primary/10 text-primary",
-                          tx.type === "sell" && "bg-success/10 text-success",
-                          tx.type === "withdrawal" && "bg-warning/10 text-warning",
-                          tx.type === "gift_card" && "bg-purple-100 text-purple-600"
+                          tx.type === "deposit" && "bg-success/10 text-success",
+                          tx.type === "withdrawal" && "bg-primary/10 text-primary",
+                          tx.type === "swap" && "bg-warning/10 text-warning"
                         )}
                       >
                         <Icon className="h-4 w-4" />
@@ -230,14 +238,19 @@ export default function Transactions() {
                     </div>
                   </td>
                   <td>
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                      {tx.country}
+                    </span>
+                  </td>
+                  <td>
                     <div>
-                      <p className="font-medium">{tx.amount}</p>
-                      {tx.crypto && (
-                        <p className="text-xs text-muted-foreground">{tx.crypto}</p>
+                      <p className="font-semibold">{tx.amountUsdt}</p>
+                      {tx.fiatEquiv && (
+                        <p className="text-xs text-muted-foreground">{tx.fiatEquiv}</p>
                       )}
                     </div>
                   </td>
-                  <td className="text-muted-foreground">{tx.rate || "—"}</td>
+                  <td className="text-muted-foreground">{tx.fee}</td>
                   <td>
                     <StatusBadge
                       status={
@@ -273,10 +286,9 @@ export default function Transactions() {
                   <div
                     className={cn(
                       "flex h-10 w-10 items-center justify-center rounded-full",
-                      selectedTx.type === "buy" && "bg-primary/10 text-primary",
-                      selectedTx.type === "sell" && "bg-success/10 text-success",
-                      selectedTx.type === "withdrawal" && "bg-warning/10 text-warning",
-                      selectedTx.type === "gift_card" && "bg-purple-100 text-purple-600"
+                      selectedTx.type === "deposit" && "bg-success/10 text-success",
+                      selectedTx.type === "withdrawal" && "bg-primary/10 text-primary",
+                      selectedTx.type === "swap" && "bg-warning/10 text-warning"
                     )}
                   >
                     {(() => {
@@ -305,9 +317,9 @@ export default function Transactions() {
                 {/* Amount */}
                 <div className="rounded-lg border border-border p-4">
                   <div className="text-center">
-                    <p className="text-2xl font-bold">{selectedTx.amount}</p>
-                    {selectedTx.crypto && (
-                      <p className="text-sm text-muted-foreground">{selectedTx.crypto}</p>
+                    <p className="text-2xl font-bold">{selectedTx.amountUsdt}</p>
+                    {selectedTx.fiatEquiv && (
+                      <p className="text-sm text-muted-foreground">{selectedTx.fiatEquiv}</p>
                     )}
                   </div>
                 </div>
@@ -331,15 +343,9 @@ export default function Transactions() {
                       <p className="font-medium text-sm">{selectedTx.user}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">User ID</p>
-                      <p className="font-medium text-sm">{selectedTx.userId}</p>
+                      <p className="text-xs text-muted-foreground">Country</p>
+                      <p className="font-medium text-sm">{selectedTx.country}</p>
                     </div>
-                    {selectedTx.rate && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Rate</p>
-                        <p className="font-medium text-sm">{selectedTx.rate}</p>
-                      </div>
-                    )}
                     <div>
                       <p className="text-xs text-muted-foreground">Fee</p>
                       <p className="font-medium text-sm">{selectedTx.fee}</p>
@@ -354,18 +360,6 @@ export default function Transactions() {
                     </div>
                   </div>
                 </div>
-
-                {/* Bank Info for Withdrawals */}
-                {selectedTx.bank && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Bank Details
-                    </h4>
-                    <div className="rounded-lg border border-border p-4">
-                      <p className="font-medium">{selectedTx.bank}</p>
-                    </div>
-                  </div>
-                )}
 
                 {/* Failure Reason */}
                 {selectedTx.failureReason && (

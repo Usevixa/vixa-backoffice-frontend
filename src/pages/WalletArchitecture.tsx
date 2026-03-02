@@ -35,10 +35,10 @@ const majorWallets = [
   },
   {
     id: "MAJ-003",
-    label: "NGN Major Wallet",
-    currencySet: ["NGN"],
+    label: "Fiat Settlement Wallet",
+    currencySet: ["Multi-Fiat"],
     balanceUsdt: "632,675.00 USDT",
-    nativeBalance: "₦643,755,000",
+    nativeBalance: "Multi-country fiat equiv",
     subWalletCount: 9147,
     lastActivity: "5 minutes ago",
     status: "active",
@@ -87,7 +87,7 @@ export default function WalletArchitecture() {
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Tier 2</p>
             <p className="font-bold mt-1">{majorWallets.length} Major Wallets</p>
-            <p className="text-xs text-muted-foreground mt-1">Per-currency pools</p>
+            <p className="text-xs text-muted-foreground mt-1">Per-asset pools</p>
           </div>
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">Tier 3</p>
@@ -105,7 +105,7 @@ export default function WalletArchitecture() {
             <p className="metric-label">Prime Wallet</p>
           </div>
           <p className="metric-value mt-1 text-primary">{totalUsdt}</p>
-          <p className="text-xs text-muted-foreground mt-1">Total custody value</p>
+          <p className="text-xs text-muted-foreground mt-1">Total custody value (USDT)</p>
         </div>
         <div className="metric-card">
           <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function WalletArchitecture() {
             <p className="metric-label">Major Wallets</p>
           </div>
           <p className="metric-value mt-1">{majorWallets.length}</p>
-          <p className="text-xs text-muted-foreground mt-1">USDT · USDC · NGN</p>
+          <p className="text-xs text-muted-foreground mt-1">USDT · USDC · Fiat Settlement</p>
         </div>
         <div className="metric-card">
           <div className="flex items-center gap-2">
@@ -156,7 +156,7 @@ export default function WalletArchitecture() {
         <div className="content-card-header">
           <h3 className="content-card-title flex items-center gap-2">
             <Layers className="h-4 w-4" />
-            Major Wallets (Per-Currency Pools)
+            Major Wallets (Per-Asset Pools)
           </h3>
         </div>
         <table className="data-table">
@@ -164,7 +164,7 @@ export default function WalletArchitecture() {
             <tr>
               <th>Major Wallet ID</th>
               <th>Label</th>
-              <th>Currency Set</th>
+              <th>Asset Type</th>
               <th>Balance (USDT Equiv)</th>
               <th>Native Balance</th>
               <th>Sub-wallets</th>
@@ -189,7 +189,7 @@ export default function WalletArchitecture() {
                         "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
                         c === "USDT" ? "bg-primary/10 text-primary" :
                         c === "USDC" ? "bg-warning/10 text-warning" :
-                        "bg-success/10 text-success"
+                        "bg-muted text-muted-foreground"
                       )}>
                         {c}
                       </span>
@@ -261,7 +261,7 @@ export default function WalletArchitecture() {
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Details</h4>
                   <div className="grid grid-cols-2 gap-3">
                     <div><p className="text-xs text-muted-foreground">Wallet ID</p><p className="font-mono text-sm">{selectedMajor.id}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Currency Set</p>
+                    <div><p className="text-xs text-muted-foreground">Asset Type</p>
                       <div className="flex gap-1 mt-1">
                         {selectedMajor.currencySet.map((c) => (
                           <span key={c} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">{c}</span>

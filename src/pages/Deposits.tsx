@@ -26,8 +26,10 @@ const deposits = [
     id: "DEP-001",
     user: "Chinedu Okonkwo",
     userId: "USR-001",
+    country: "NG",
     subWallet: "SUB-00142",
     amountUsdt: "240.50 USDT",
+    fiatEquiv: "(~ ₦244,830)",
     ycChannel: "MTN Mobile Money",
     status: "credited",
     ycRef: "YC-DEP-5523891",
@@ -43,9 +45,11 @@ const deposits = [
     id: "DEP-002",
     user: "Amara Eze",
     userId: "USR-002",
+    country: "KE",
     subWallet: "SUB-00089",
     amountUsdt: "175.00 USDT",
-    ycChannel: "Flutterwave",
+    fiatEquiv: "(~ KES 24,150)",
+    ycChannel: "MPESA",
     status: "credited",
     ycRef: "YC-DEP-5523890",
     oxsCreditRef: "OXS-RCV-5523891",
@@ -60,8 +64,10 @@ const deposits = [
     id: "DEP-003",
     user: "Emeka Nwosu",
     userId: "USR-005",
+    country: "GH",
     subWallet: "SUB-00213",
     amountUsdt: "490.00 USDT",
+    fiatEquiv: "(~ GHS 7,742)",
     ycChannel: "Bank Transfer (YC)",
     status: "confirmed",
     ycRef: "YC-DEP-9912345",
@@ -77,9 +83,11 @@ const deposits = [
     id: "DEP-004",
     user: "Folake Adeyemi",
     userId: "USR-004",
+    country: "ZA",
     subWallet: null,
     amountUsdt: "118.00 USDT",
-    ycChannel: "Airtel Money",
+    fiatEquiv: "(~ ZAR 2,242)",
+    ycChannel: "Bank Transfer (YC)",
     status: "failed",
     ycRef: "YC-DEP-5231987",
     oxsCreditRef: null,
@@ -95,8 +103,10 @@ const deposits = [
     id: "DEP-005",
     user: "Ngozi Obi",
     userId: "USR-006",
+    country: "KE",
     subWallet: "SUB-00078",
     amountUsdt: "305.00 USDT",
+    fiatEquiv: "(~ KES 42,090)",
     ycChannel: "Chipper Cash",
     status: "credited",
     ycRef: "YC-DEP-5523880",
@@ -203,6 +213,7 @@ export default function Deposits() {
             <tr>
               <th>Deposit ID</th>
               <th>User / Sub-wallet</th>
+              <th>Country</th>
               <th>YC Channel</th>
               <th>Amount (USDT)</th>
               <th>Status</th>
@@ -227,11 +238,19 @@ export default function Deposits() {
                   </div>
                 </td>
                 <td>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                    {dep.country}
+                  </span>
+                </td>
+                <td>
                   <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-warning/10 text-warning">
                     {dep.ycChannel}
                   </span>
                 </td>
-                <td className="font-semibold text-success">{dep.amountUsdt}</td>
+                <td>
+                  <p className="font-semibold text-success">{dep.amountUsdt}</p>
+                  {dep.fiatEquiv && <p className="text-xs text-muted-foreground">{dep.fiatEquiv}</p>}
+                </td>
                 <td>
                   <StatusBadge status={statusConfig[dep.status as keyof typeof statusConfig]}>
                     {dep.status}
