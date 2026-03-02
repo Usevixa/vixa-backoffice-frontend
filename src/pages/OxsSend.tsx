@@ -21,6 +21,7 @@ const sends = [
     toDestination: "0x3f4...a912",
     asset: "USDT",
     amountUsdt: "250.00 USDT",
+    txType: "On-Chain",
     status: "confirmed",
     providerRef: "OXS-SND-7841234",
     txHash: "0xabc123...def456",
@@ -39,6 +40,7 @@ const sends = [
     toDestination: "GTBank ***7891",
     asset: "USDT",
     amountUsdt: "175.00 USDT",
+    txType: "On-Ramp",
     status: "processing",
     providerRef: "OXS-SND-7841235",
     txHash: null,
@@ -57,6 +59,7 @@ const sends = [
     toDestination: "0x7c1...f329",
     asset: "USDC",
     amountUsdt: "490.00 USDT",
+    txType: "On-Chain",
     status: "failed",
     providerRef: "OXS-SND-7841220",
     txHash: null,
@@ -73,9 +76,10 @@ const sends = [
     id: "SND-004",
     fromWallet: "SUB-00301",
     fromUser: "Emeka Nwosu",
-    toDestination: "0x2d8...b741",
+    toDestination: "SUB-00142",
     asset: "USDT",
     amountUsdt: "1,180.00 USDT",
+    txType: "Internal",
     status: "confirmed",
     providerRef: "OXS-SND-7841199",
     txHash: "0xfed987...cba654",
@@ -94,6 +98,7 @@ const sends = [
     toDestination: "0x5e9...c123",
     asset: "USDT",
     amountUsdt: "310.00 USDT",
+    txType: "On-Chain",
     status: "confirmed",
     providerRef: "OXS-SND-7841100",
     txHash: "0x123abc...456def",
@@ -117,6 +122,12 @@ const statusConfig = {
 const assetColors: Record<string, string> = {
   USDT: "bg-primary/10 text-primary",
   USDC: "bg-warning/10 text-warning",
+};
+
+const txTypeColors: Record<string, string> = {
+  "On-Chain": "bg-primary/10 text-primary",
+  "On-Ramp": "bg-success/10 text-success",
+  "Internal": "bg-muted text-muted-foreground",
 };
 
 export default function OxsSend() {
@@ -175,12 +186,23 @@ export default function OxsSend() {
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="Asset" />
+            <SelectValue placeholder="Coin" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Assets</SelectItem>
+            <SelectItem value="all">All Coins</SelectItem>
             <SelectItem value="usdt">USDT</SelectItem>
             <SelectItem value="usdc">USDC</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="Tx Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Tx Types</SelectItem>
+            <SelectItem value="on-chain">On-Chain</SelectItem>
+            <SelectItem value="on-ramp">On-Ramp</SelectItem>
+            <SelectItem value="internal">Internal</SelectItem>
           </SelectContent>
         </Select>
         <Select defaultValue="all">
@@ -206,7 +228,8 @@ export default function OxsSend() {
               <th>Send Tx ID</th>
               <th>From Sub-wallet</th>
               <th>To (Destination)</th>
-              <th>Asset</th>
+              <th>Coin</th>
+              <th>Transaction Type</th>
               <th>Amount (USDT)</th>
               <th>Status</th>
               <th>Provider Ref</th>
@@ -232,6 +255,11 @@ export default function OxsSend() {
                 <td>
                   <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", assetColors[snd.asset] ?? "bg-muted text-muted-foreground")}>
                     {snd.asset}
+                  </span>
+                </td>
+                <td>
+                  <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", txTypeColors[snd.txType] ?? "bg-muted text-muted-foreground")}>
+                    {snd.txType}
                   </span>
                 </td>
                 <td className="font-semibold">{snd.amountUsdt}</td>
@@ -266,10 +294,13 @@ export default function OxsSend() {
                 <div className="rounded-lg border border-border p-4 text-center">
                   <p className="text-3xl font-bold text-primary">{selectedSend.amountUsdt}</p>
                   <p className="text-sm text-muted-foreground mt-1">{selectedSend.asset} · {selectedSend.fromWallet} → {selectedSend.toDestination}</p>
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center justify-center gap-2">
                     <StatusBadge status={statusConfig[selectedSend.status as keyof typeof statusConfig]}>
                       {selectedSend.status.toUpperCase()}
                     </StatusBadge>
+                    <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", txTypeColors[selectedSend.txType])}>
+                      {selectedSend.txType}
+                    </span>
                   </div>
                 </div>
 
@@ -297,7 +328,8 @@ export default function OxsSend() {
                     <div><p className="text-xs text-muted-foreground">From Sub-wallet</p><p className="font-mono text-sm font-medium">{selectedSend.fromWallet}</p></div>
                     <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium">{selectedSend.fromUser}</p></div>
                     <div><p className="text-xs text-muted-foreground">To Destination</p><p className="font-mono text-sm">{selectedSend.toDestination}</p></div>
-                    <div><p className="text-xs text-muted-foreground">Asset</p><p className="font-medium">{selectedSend.asset}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Coin</p><p className="font-medium">{selectedSend.asset}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Transaction Type</p><p className="font-medium">{selectedSend.txType}</p></div>
                     <div><p className="text-xs text-muted-foreground">Provider Ref</p><p className="font-mono text-sm">{selectedSend.providerRef}</p></div>
                     <div><p className="text-xs text-muted-foreground">Retry Count</p><p className="font-medium">{selectedSend.retryCount}</p></div>
                     {selectedSend.txHash && (

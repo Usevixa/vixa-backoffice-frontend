@@ -115,7 +115,7 @@ export default function Wallets() {
         </Button>
       </div>
 
-      {/* Wallets Table */}
+      {/* Wallets Table — Native Balance column removed */}
       <div className="content-card">
         <table className="data-table">
           <thead>
@@ -124,7 +124,6 @@ export default function Wallets() {
               <th>User</th>
               <th>Coin</th>
               <th>Balance (USDT Equiv)</th>
-              <th>Native Balance</th>
               <th>Status</th>
               <th>Last Activity</th>
               <th className="text-right">Actions</th>
@@ -146,7 +145,6 @@ export default function Wallets() {
                   </span>
                 </td>
                 <td className="font-semibold text-success">{wallet.usdtEquiv}</td>
-                <td className="text-muted-foreground">{wallet.availableBalance}</td>
                 <td>
                   <StatusBadge status={wallet.status === "active" ? "success" : "error"}>
                     {wallet.status}
@@ -202,12 +200,23 @@ export default function Wallets() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="rounded-lg border border-border p-4">
-                    <p className="text-xs text-muted-foreground">Available Balance</p>
-                    <p className="text-xl font-semibold">{selectedWallet.availableBalance}</p>
+                    <p className="text-xs text-muted-foreground">Available (USDT equiv)</p>
+                    <p className="text-xl font-semibold">{selectedWallet.usdtEquiv}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Native: {selectedWallet.availableBalance}</p>
                   </div>
                   <div className="rounded-lg border border-border p-4">
-                    <p className="text-xs text-muted-foreground">Ledger Balance</p>
-                    <p className="text-xl font-semibold">{selectedWallet.ledgerBalance}</p>
+                    <p className="text-xs text-muted-foreground">Ledger (USDT equiv)</p>
+                    <p className="text-xl font-semibold">{selectedWallet.usdtEquiv}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Native: {selectedWallet.ledgerBalance}</p>
+                  </div>
+                </div>
+
+                {/* Coin Breakdown — inside drawer only */}
+                <div className="rounded-lg bg-muted/50 p-4">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Coin Detail</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{selectedWallet.coin}</span>
+                    <span className="text-sm font-semibold">{selectedWallet.availableBalance}</span>
                   </div>
                 </div>
 

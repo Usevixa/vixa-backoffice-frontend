@@ -21,6 +21,9 @@ const withdrawals = [
     userId: "USR-001",
     subWallet: "SUB-00142",
     amountUsdt: "250.00 USDT",
+    netDelivered: "248.50 USDT",
+    beneficiaryBank: "GTBank ••••1234",
+    fiatEquiv: "(≈ ₦361,325)",
     destination: "0xA4f2...3ac9 (Polygon)",
     status: "completed",
     ageMinutes: null,
@@ -45,6 +48,9 @@ const withdrawals = [
     userId: "USR-002",
     subWallet: "SUB-00089",
     amountUsdt: "175.00 USDT",
+    netDelivered: "173.25 USDT",
+    beneficiaryBank: "KCB ••••5678",
+    fiatEquiv: "(≈ KES 23,908)",
     destination: "0xB9c1...de44 (Polygon)",
     status: "pending",
     ageMinutes: 8,
@@ -69,6 +75,9 @@ const withdrawals = [
     userId: "USR-003",
     subWallet: "SUB-00213",
     amountUsdt: "490.00 USDT",
+    netDelivered: "485.10 USDT",
+    beneficiaryBank: "GCB ••••9012",
+    fiatEquiv: "(≈ GHS 7,663)",
     destination: "0xC3a7...ff01 (Polygon)",
     status: "pending",
     ageMinutes: 35,
@@ -93,6 +102,9 @@ const withdrawals = [
     userId: "USR-005",
     subWallet: "SUB-00301",
     amountUsdt: "1,180.00 USDT",
+    netDelivered: "1,168.20 USDT",
+    beneficiaryBank: "FNB ••••3456",
+    fiatEquiv: "(≈ ZAR 21,028)",
     destination: "0xD8b3...8Yk3 (Polygon)",
     status: "failed",
     ageMinutes: null,
@@ -117,6 +129,9 @@ const withdrawals = [
     userId: "USR-006",
     subWallet: "SUB-00078",
     amountUsdt: "310.00 USDT",
+    netDelivered: "306.90 USDT",
+    beneficiaryBank: "Equity ••••7890",
+    fiatEquiv: "(≈ KES 42,352)",
     destination: "0xE1f9...mN2p (Polygon)",
     status: "completed",
     ageMinutes: null,
@@ -255,7 +270,6 @@ export default function Withdrawals() {
         </TabsContent>
 
         <TabsContent value="queue" className="space-y-4">
-          {/* Quick filter buttons */}
           <div className="flex gap-2 flex-wrap">
             <Button size="sm" variant="outline">&gt;30 min</Button>
             <Button size="sm" variant="outline">Failed last 2h</Button>
@@ -291,7 +305,20 @@ export default function Withdrawals() {
                   </div>
                 </div>
 
-                {/* Full Timeline including handoff point */}
+                {/* Net Delivered + Beneficiary */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Net Delivered (USDT)</p>
+                    <p className="text-lg font-semibold text-success">{selectedWdr.netDelivered}</p>
+                    {selectedWdr.fiatEquiv && <p className="text-xs text-muted-foreground mt-1">{selectedWdr.fiatEquiv}</p>}
+                  </div>
+                  <div className="rounded-lg border border-border p-3">
+                    <p className="text-xs text-muted-foreground">Beneficiary Bank</p>
+                    <p className="text-sm font-medium mt-1">{selectedWdr.beneficiaryBank}</p>
+                  </div>
+                </div>
+
+                {/* Full Timeline */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Full Status Timeline</h4>
                   <div className="text-xs text-muted-foreground mb-2">OXS debit → YC processing → Polygon confirmation</div>
@@ -321,7 +348,7 @@ export default function Withdrawals() {
                   })}
                 </div>
 
-                {/* Provider References */}
+                {/* Provider References — in drawer only */}
                 <div className="rounded-lg bg-muted/50 p-4 space-y-3">
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Provider References</h4>
                   <div className="grid grid-cols-1 gap-2">
@@ -396,6 +423,7 @@ function WithdrawalsTable({
 }: {
   withdrawals: {
     id: string; user: string; userId: string; subWallet: string; amountUsdt: string;
+    netDelivered: string; beneficiaryBank: string; fiatEquiv?: string;
     destination: string; status: string; ageMinutes: number | null; createdAt: string;
   }[];
   onSelect: (w: any) => void;
@@ -409,6 +437,8 @@ function WithdrawalsTable({
             <th>Withdrawal ID</th>
             <th>User / Sub-wallet</th>
             <th>Amount (USDT)</th>
+            <th>Net Delivered (USDT)</th>
+            <th>Beneficiary Bank</th>
             <th>Destination</th>
             <th>Status</th>
             {showSla && <th>Age (SLA)</th>}
@@ -434,6 +464,13 @@ function WithdrawalsTable({
                 </div>
               </td>
               <td className="font-semibold">{w.amountUsdt}</td>
+              <td>
+                <div>
+                  <p className="font-semibold text-success">{w.netDelivered}</p>
+                  {w.fiatEquiv && <p className="text-xs text-muted-foreground">{w.fiatEquiv}</p>}
+                </div>
+              </td>
+              <td className="text-sm">{w.beneficiaryBank}</td>
               <td className="text-muted-foreground text-xs font-mono">{w.destination}</td>
               <td>
                 <StatusBadge status={statusConfig[w.status as keyof typeof statusConfig]}>

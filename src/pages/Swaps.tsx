@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const swaps = [
@@ -105,13 +106,6 @@ const swaps = [
   },
 ];
 
-const statusColors = {
-  initiated: "bg-muted text-muted-foreground",
-  rate_locked: "bg-primary/10 text-primary",
-  completed: "bg-success/10 text-success",
-  failed: "bg-destructive/10 text-destructive",
-};
-
 const statusBadgeMap = {
   initiated: "neutral",
   rate_locked: "info",
@@ -122,11 +116,18 @@ const statusBadgeMap = {
 export default function Swaps() {
   const [selectedSwap, setSelectedSwap] = useState<typeof swaps[0] | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
 
   const completed = swaps.filter(s => s.status === "completed").length;
   const active = swaps.filter(s => s.status === "rate_locked" || s.status === "initiated").length;
   const failed = swaps.filter(s => s.status === "failed").length;
   const totalSpread = "12.75 USDT";
+
+  const filteredSwaps = activeTab === "all"
+    ? swaps
+    : activeTab === "completed"
+    ? swaps.filter(s => s.status === "completed")
+    : swaps.filter(s => s.status === "failed");
 
   return (
     <div className="space-y-6">
@@ -160,109 +161,120 @@ export default function Swaps() {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" placeholder="Search swap ID or user..." className="pl-9" />
-        </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="From Coin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="usdt">USDT</SelectItem>
-            <SelectItem value="usdc">USDC</SelectItem>
-            <SelectItem value="sol">SOL</SelectItem>
-            <SelectItem value="eth">ETH</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="To Coin" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="usdt">USDT</SelectItem>
-            <SelectItem value="usdc">USDC</SelectItem>
-            <SelectItem value="sol">SOL</SelectItem>
-            <SelectItem value="eth">ETH</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="initiated">Initiated</SelectItem>
-            <SelectItem value="rate_locked">Rate Locked</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="icon"><Filter className="h-4 w-4" /></Button>
-      </div>
+      {/* Tabs: All / Completed / Failed — Rate Locked removed as tab, kept as status filter */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
+          <TabsTrigger value="failed">Failed</TabsTrigger>
+        </TabsList>
 
-      {/* Table */}
-      <div className="content-card">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th>Swap ID</th>
-              <th>User</th>
-              <th>Conversion</th>
-              <th>Amount In</th>
-              <th>Amount Out</th>
-              <th>USDT Equiv</th>
-              <th>Rate Used</th>
-              <th>Spread (USDT)</th>
-              <th>Status</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            {swaps.map((swap) => (
-              <tr
-                key={swap.id}
-                className={cn("cursor-pointer", swap.status === "failed" && "bg-destructive/5")}
-                onClick={() => { setSelectedSwap(swap); setSheetOpen(true); }}
-              >
-                <td className="font-mono text-sm font-medium">{swap.id}</td>
-                <td>
-                  <div>
-                    <p className="font-medium">{swap.user}</p>
-                    <p className="text-xs text-muted-foreground">{swap.userId}</p>
-                  </div>
-                </td>
-                <td>
-                  <div className="flex items-center gap-1">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
-                      {swap.fromCoin}
-                    </span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
-                      {swap.toCoin}
-                    </span>
-                  </div>
-                </td>
-                <td className="font-medium">{swap.amountIn}</td>
-                <td className="font-medium">{swap.amountOut}</td>
-                <td className="font-semibold text-success">{swap.usdtEquiv}</td>
-                <td className="text-muted-foreground text-sm">{swap.rateUsed}</td>
-                <td className="text-success font-medium">{swap.spread}</td>
-                <td>
-                  <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", statusColors[swap.status as keyof typeof statusColors])}>
-                    {swap.status.replace("_", " ").toUpperCase()}
-                  </span>
-                </td>
-                <td className="text-muted-foreground">{swap.timestamp}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        <TabsContent value={activeTab} className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input type="search" placeholder="Search swap ID or user..." className="pl-9" />
+            </div>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="From Coin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="usdt">USDT</SelectItem>
+                <SelectItem value="usdc">USDC</SelectItem>
+                <SelectItem value="sol">SOL</SelectItem>
+                <SelectItem value="eth">ETH</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="To Coin" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="usdt">USDT</SelectItem>
+                <SelectItem value="usdc">USDC</SelectItem>
+                <SelectItem value="sol">SOL</SelectItem>
+                <SelectItem value="eth">ETH</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="initiated">Initiated</SelectItem>
+                <SelectItem value="rate_locked">Rate Locked</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon"><Filter className="h-4 w-4" /></Button>
+          </div>
+
+          {/* Table */}
+          <div className="content-card">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Swap ID</th>
+                  <th>User</th>
+                  <th>Conversion</th>
+                  <th>Amount In</th>
+                  <th>Amount Out</th>
+                  <th>USDT Equiv</th>
+                  <th>Rate Used</th>
+                  <th>Spread (USDT)</th>
+                  <th>Status</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSwaps.map((swap) => (
+                  <tr
+                    key={swap.id}
+                    className={cn("cursor-pointer", swap.status === "failed" && "bg-destructive/5")}
+                    onClick={() => { setSelectedSwap(swap); setSheetOpen(true); }}
+                  >
+                    <td className="font-mono text-sm font-medium">{swap.id}</td>
+                    <td>
+                      <div>
+                        <p className="font-medium">{swap.user}</p>
+                        <p className="text-xs text-muted-foreground">{swap.userId}</p>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-1">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                          {swap.fromCoin}
+                        </span>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                          {swap.toCoin}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="font-medium">{swap.amountIn}</td>
+                    <td className="font-medium">{swap.amountOut}</td>
+                    <td className="font-semibold text-success">{swap.usdtEquiv}</td>
+                    <td className="text-muted-foreground text-sm">{swap.rateUsed}</td>
+                    <td className="text-success font-medium">{swap.spread}</td>
+                    <td>
+                      <StatusBadge status={statusBadgeMap[swap.status as keyof typeof statusBadgeMap]}>
+                        {swap.status.replace("_", " ").toUpperCase()}
+                      </StatusBadge>
+                    </td>
+                    <td className="text-muted-foreground">{swap.timestamp}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Swap Detail Sheet */}
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>

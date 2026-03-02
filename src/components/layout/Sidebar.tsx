@@ -13,6 +13,7 @@ import {
   UserCog,
   ChevronLeft,
   ChevronRight,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Swap (OpenXSwitch)", href: "/oxs-swap", icon: RefreshCw },
   { name: "Deposits (Network In)", href: "/deposits", icon: ArrowDownLeft },
   { name: "Withdrawals (Network Out)", href: "/withdrawals", icon: ArrowUpRight },
+  { name: "Transaction History", href: "/transaction-history", icon: History },
   { name: "Rates & Markups", href: "/rates", icon: Percent },
   { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook },
   { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale },
