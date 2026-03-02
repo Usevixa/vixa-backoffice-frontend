@@ -21,19 +21,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const subWallets = [
-  { id: "SUB-00142", user: "Chinedu Okonkwo", userId: "USR-001", phone: "+234 803 456 7890", balanceUsdt: "2,450.50 USDT", breakdown: { usdt: "2,450.50 USDT", usdc: "0 USDC", ngn: "₦0" }, status: "active", lastActivity: "2 hours ago" },
-  { id: "SUB-00089", user: "Amara Eze", userId: "USR-002", phone: "+234 805 678 9012", balanceUsdt: "874.13 USDT", breakdown: { usdt: "0 USDT", usdc: "875.00 USDC", ngn: "₦0" }, status: "active", lastActivity: "5 hours ago" },
-  { id: "SUB-00213", user: "Ibrahim Musa", userId: "USR-003", phone: "+234 807 890 1234", balanceUsdt: "11,068.00 USDT", breakdown: { usdt: "5,500.00 USDT", usdc: "0 USDC", ngn: "₦5,670,000" }, status: "frozen", lastActivity: "3 days ago" },
-  { id: "SUB-00301", user: "Emeka Nwosu", userId: "USR-005", phone: "+234 801 234 5678", balanceUsdt: "31,210.00 USDT", breakdown: { usdt: "15,600.00 USDT", usdc: "0 USDC", ngn: "₦15,890,000" }, status: "active", lastActivity: "30 mins ago" },
-  { id: "SUB-00078", user: "Ngozi Obi", userId: "USR-006", phone: "+234 802 345 6789", balanceUsdt: "4,018.45 USDT", breakdown: { usdt: "0 USDT", usdc: "875.00 USDC", ngn: "₦3,200,000" }, status: "active", lastActivity: "1 hour ago" },
-  { id: "SUB-00418", user: "Folake Adeyemi", userId: "USR-004", phone: "+234 809 012 3456", balanceUsdt: "117.80 USDT", breakdown: { usdt: "0 USDT", usdc: "0 USDC", ngn: "₦120,000" }, status: "active", lastActivity: "1 day ago" },
+  { id: "SUB-00142", user: "Chinedu Okonkwo", userId: "USR-001", phone: "+234 803 456 7890", country: "NG", balanceUsdt: "2,450.50 USDT", breakdown: { usdt: "2,450.50 USDT", usdc: "0 USDC", sol: "0 SOL" }, status: "active", lastActivity: "2 hours ago" },
+  { id: "SUB-00089", user: "Amara Eze", userId: "USR-002", phone: "+254 712 345 678", country: "KE", balanceUsdt: "874.13 USDT", breakdown: { usdt: "0 USDT", usdc: "875.00 USDC", sol: "0 SOL" }, status: "active", lastActivity: "5 hours ago" },
+  { id: "SUB-00213", user: "Ibrahim Musa", userId: "USR-003", phone: "+233 244 567 890", country: "GH", balanceUsdt: "11,068.00 USDT", breakdown: { usdt: "5,500.00 USDT", usdc: "0 USDC", sol: "38.10 SOL" }, status: "frozen", lastActivity: "3 days ago" },
+  { id: "SUB-00301", user: "Emeka Nwosu", userId: "USR-005", phone: "+234 801 234 5678", country: "NG", balanceUsdt: "31,210.00 USDT", breakdown: { usdt: "15,600.00 USDT", usdc: "0 USDC", sol: "85.00 SOL" }, status: "active", lastActivity: "30 mins ago" },
+  { id: "SUB-00078", user: "Ngozi Obi", userId: "USR-006", phone: "+254 700 123 456", country: "KE", balanceUsdt: "4,018.45 USDT", breakdown: { usdt: "0 USDT", usdc: "875.00 USDC", sol: "22.30 SOL" }, status: "active", lastActivity: "1 hour ago" },
+  { id: "SUB-00418", user: "Folake Adeyemi", userId: "USR-004", phone: "+27 82 345 6789", country: "ZA", balanceUsdt: "117.80 USDT", breakdown: { usdt: "117.80 USDT", usdc: "0 USDC", sol: "0 SOL" }, status: "active", lastActivity: "1 day ago" },
 ];
 
 const ledgerEntries = [
-  { type: "credit", entity: "Receive", entityId: "RCV-001", amount: "+240.50 USDT", date: "Dec 31, 14:32" },
-  { type: "debit", entity: "Send", entityId: "SND-001", amount: "-250.00 USDT", date: "Dec 31, 14:30" },
-  { type: "debit", entity: "Swap", entityId: "OXS-SWP-002", amount: "-500 USDT", date: "Dec 31, 13:15" },
-  { type: "credit", entity: "Receive", entityId: "RCV-005", amount: "+305.00 USDT", date: "Dec 30, 16:45" },
+  { type: "credit", entity: "Deposit", entityId: "DEP-001", amount: "+240.50 USDT", date: "Dec 31, 14:32" },
+  { type: "debit", entity: "Withdrawal", entityId: "WDR-001", amount: "-250.00 USDT", date: "Dec 31, 14:30" },
+  { type: "debit", entity: "Swap", entityId: "SWP-002", amount: "-500 USDT", date: "Dec 31, 13:15" },
+  { type: "credit", entity: "Deposit", entityId: "DEP-005", amount: "+305.00 USDT", date: "Dec 30, 16:45" },
 ];
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -88,6 +88,18 @@ export default function CustomerWallets() {
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-40">
+            <SelectValue placeholder="Country" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Countries</SelectItem>
+            <SelectItem value="NG">Nigeria</SelectItem>
+            <SelectItem value="KE">Kenya</SelectItem>
+            <SelectItem value="GH">Ghana</SelectItem>
+            <SelectItem value="ZA">South Africa</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select defaultValue="all">
+          <SelectTrigger className="w-40">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -106,8 +118,9 @@ export default function CustomerWallets() {
             <tr>
               <th>Sub-wallet ID</th>
               <th>User</th>
+              <th>Country</th>
               <th>Balance (USDT Equiv)</th>
-              <th>Native Breakdown</th>
+              <th>Coin Breakdown</th>
               <th>Status</th>
               <th>Last Activity</th>
               <th className="text-right">Actions</th>
@@ -127,12 +140,17 @@ export default function CustomerWallets() {
                     <p className="text-xs text-muted-foreground">{wallet.phone}</p>
                   </div>
                 </td>
+                <td>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                    {wallet.country}
+                  </span>
+                </td>
                 <td className="font-semibold text-success">{wallet.balanceUsdt}</td>
                 <td>
                   <div className="text-xs text-muted-foreground space-y-0.5">
                     {wallet.breakdown.usdt !== "0 USDT" && <div>{wallet.breakdown.usdt}</div>}
                     {wallet.breakdown.usdc !== "0 USDC" && <div>{wallet.breakdown.usdc}</div>}
-                    {wallet.breakdown.ngn !== "₦0" && <div>{wallet.breakdown.ngn}</div>}
+                    {wallet.breakdown.sol !== "0 SOL" && <div>{wallet.breakdown.sol}</div>}
                   </div>
                 </td>
                 <td>
@@ -214,7 +232,7 @@ export default function CustomerWallets() {
                   <p className="text-3xl font-bold text-success">{selectedWallet.balanceUsdt}</p>
                 </div>
 
-                {/* Native Breakdown */}
+                {/* Coin Breakdown */}
                 <div className="grid grid-cols-3 gap-3">
                   <div className="rounded-lg border border-border p-3 text-center">
                     <p className="text-xs text-muted-foreground">USDT</p>
@@ -225,8 +243,8 @@ export default function CustomerWallets() {
                     <p className="font-semibold text-sm mt-1">{selectedWallet.breakdown.usdc}</p>
                   </div>
                   <div className="rounded-lg border border-border p-3 text-center">
-                    <p className="text-xs text-muted-foreground">NGN</p>
-                    <p className="font-semibold text-sm mt-1">{selectedWallet.breakdown.ngn}</p>
+                    <p className="text-xs text-muted-foreground">SOL</p>
+                    <p className="font-semibold text-sm mt-1">{selectedWallet.breakdown.sol}</p>
                   </div>
                 </div>
 
@@ -235,6 +253,7 @@ export default function CustomerWallets() {
                   <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium">{selectedWallet.user}</p></div>
                   <div><p className="text-xs text-muted-foreground">User ID</p><p className="font-mono text-sm">{selectedWallet.userId}</p></div>
                   <div><p className="text-xs text-muted-foreground">Phone</p><p className="font-medium">{selectedWallet.phone}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Country</p><p className="font-medium">{selectedWallet.country}</p></div>
                   <div><p className="text-xs text-muted-foreground">Status</p><div className="mt-1"><StatusBadge status={selectedWallet.status === "active" ? "success" : "error"}>{selectedWallet.status}</StatusBadge></div></div>
                 </div>
 

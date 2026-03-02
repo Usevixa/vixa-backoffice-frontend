@@ -19,10 +19,10 @@ const dailyRecon = [
   {
     date: "Dec 31, 2024",
     provider: "OpenXSwitch",
-    totalVolume: "₦145.2M",
-    expected: "₦145.2M",
-    actual: "₦145.0M",
-    variance: "₦200,000",
+    totalVolume: "142,580 USDT",
+    expected: "142,580 USDT",
+    actual: "142,384 USDT",
+    variance: "196 USDT",
     exceptions: 2,
     status: "exception",
   },
@@ -39,9 +39,9 @@ const dailyRecon = [
   {
     date: "Dec 30, 2024",
     provider: "OpenXSwitch",
-    totalVolume: "₦132.8M",
-    expected: "₦132.8M",
-    actual: "₦132.8M",
+    totalVolume: "130,400 USDT",
+    expected: "130,400 USDT",
+    actual: "130,400 USDT",
     variance: "0",
     exceptions: 0,
     status: "matched",
@@ -59,9 +59,9 @@ const dailyRecon = [
   {
     date: "Dec 29, 2024",
     provider: "OpenXSwitch",
-    totalVolume: "₦128.5M",
-    expected: "₦128.5M",
-    actual: "₦128.5M",
+    totalVolume: "126,200 USDT",
+    expected: "126,200 USDT",
+    actual: "126,200 USDT",
     variance: "0",
     exceptions: 0,
     status: "matched",
@@ -73,21 +73,21 @@ const exceptions = [
     id: "EXC-001",
     type: "missing_credit",
     provider: "OpenXSwitch",
-    amount: "₦150,000",
+    amount: "147 USDT",
     transferId: "TRF-20241231-003",
     createdAt: "Dec 31, 2024 16:00",
     status: "open",
-    description: "RECEIVE credited to wallet but not settled with provider",
+    description: "Deposit credited to wallet but not settled with provider",
   },
   {
     id: "EXC-002",
     type: "amount_mismatch",
     provider: "OpenXSwitch",
-    amount: "₦50,000",
+    amount: "49 USDT",
     transferId: "TRF-20241231-005",
     createdAt: "Dec 31, 2024 15:30",
     status: "open",
-    description: "SEND settled but amount differs from expected by ₦50,000",
+    description: "Send settled but amount differs from expected by 49 USDT",
   },
   {
     id: "EXC-003",
@@ -104,31 +104,31 @@ const exceptions = [
     id: "EXC-004",
     type: "swap_imbalance",
     provider: "Yellow Card",
-    amount: "₦50,000",
+    amount: "50 USDT",
     transferId: "SWP-20241231-003",
     createdAt: "Dec 31, 2024 14:00",
     status: "open",
-    description: "SWAP debit from NGN wallet without matching USDT credit",
+    description: "Swap debit without matching credit",
   },
   {
     id: "EXC-005",
     type: "receive_unconfirmed",
     provider: "OpenXSwitch",
-    amount: "₦180,000",
+    amount: "177 USDT",
     transferId: "TRF-20241231-010",
     createdAt: "Dec 31, 2024 11:30",
     status: "open",
-    description: "RECEIVE credited to wallet but not confirmed by provider",
+    description: "Deposit credited to wallet but not confirmed by provider",
   },
   {
     id: "EXC-006",
     type: "send_unsettled",
     provider: "OpenXSwitch",
-    amount: "₦320,000",
+    amount: "314 USDT",
     transferId: "TRF-20241231-008",
     createdAt: "Dec 31, 2024 10:15",
     status: "resolved",
-    description: "SEND settled with provider but not debited from wallet",
+    description: "Send settled with provider but not debited from wallet",
     resolution: "Manual debit applied with audit note",
   },
 ];
@@ -155,7 +155,7 @@ export default function ReconciliationSettlement() {
       <div className="page-header">
         <h1 className="page-title">Reconciliation & Settlement</h1>
         <p className="page-description">
-          Daily reconciliation and exception management
+          Daily reconciliation and exception management — all values in USDT
         </p>
       </div>
 
@@ -163,7 +163,7 @@ export default function ReconciliationSettlement() {
       <div className="grid gap-4 md:grid-cols-4">
         <div className="metric-card">
           <p className="metric-label">Today's Volume</p>
-          <p className="metric-value mt-1">₦145.2M</p>
+          <p className="metric-value mt-1">142,580 USDT</p>
         </div>
         <div className="metric-card">
           <div className="flex items-center gap-2">
@@ -181,7 +181,7 @@ export default function ReconciliationSettlement() {
         </div>
         <div className="metric-card">
           <p className="metric-label">Pending Settlement</p>
-          <p className="metric-value mt-1">₦8.4M</p>
+          <p className="metric-value mt-1">8,250 USDT</p>
         </div>
       </div>
 
@@ -252,7 +252,7 @@ export default function ReconciliationSettlement() {
                 <tr>
                   <th>Date</th>
                   <th>Provider</th>
-                  <th>Total Volume</th>
+                  <th>Total Volume (USDT)</th>
                   <th>Expected</th>
                   <th>Actual</th>
                   <th>Variance</th>
@@ -355,7 +355,7 @@ export default function ReconciliationSettlement() {
                   <th>Exception ID</th>
                   <th>Type</th>
                   <th>Provider</th>
-                  <th>Amount</th>
+                  <th>Amount (USDT)</th>
                   <th>Transfer ID</th>
                   <th>Status</th>
                   <th>Created At</th>
@@ -467,44 +467,39 @@ export default function ReconciliationSettlement() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Transfer ID</p>
-                      <p className="font-medium text-sm font-mono">{selectedExc.transferId}</p>
+                      <p className="font-mono text-sm">{selectedExc.transferId}</p>
                     </div>
                     <div className="col-span-2">
                       <p className="text-xs text-muted-foreground">Description</p>
-                      <p className="font-medium text-sm">{selectedExc.description}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Created At</p>
-                      <p className="font-medium text-sm">{selectedExc.createdAt}</p>
+                      <p className="text-sm mt-1">{selectedExc.description}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Resolution (if resolved) */}
-                {selectedExc.resolution && (
+                {"resolution" in selectedExc && selectedExc.resolution && (
                   <div className="rounded-lg border border-success/30 bg-success/5 p-4">
                     <p className="text-sm font-medium text-success">Resolution</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {selectedExc.resolution}
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedExc.resolution}</p>
                   </div>
                 )}
 
-                {/* Actions (if open) */}
+                {/* Resolve form (if open) */}
                 {selectedExc.status === "open" && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Resolution Note</p>
-                      <Textarea
-                        placeholder="Describe how this exception was resolved..."
-                        value={resolutionNote}
-                        onChange={(e) => setResolutionNote(e.target.value)}
-                      />
+                  <div className="space-y-4 border-t border-border pt-4">
+                    <h4 className="text-sm font-semibold">Resolve Exception</h4>
+                    <Textarea
+                      placeholder="Describe the resolution action taken..."
+                      value={resolutionNote}
+                      onChange={(e) => setResolutionNote(e.target.value)}
+                    />
+                    <div className="flex gap-3">
+                      <Button className="flex-1" disabled={!resolutionNote}>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Mark Resolved
+                      </Button>
                     </div>
-                    <Button className="w-full">
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Mark as Resolved
-                    </Button>
+                    <p className="text-xs text-muted-foreground text-center">Resolution will be logged to the Audit Trail</p>
                   </div>
                 )}
               </div>

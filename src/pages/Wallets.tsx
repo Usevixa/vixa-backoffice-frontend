@@ -22,21 +22,24 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 const wallets = [
-  { id: "WAL-001", user: "Chinedu Okonkwo", userId: "USR-001", currency: "NGN", availableBalance: "₦2,450,000.00", ledgerBalance: "₦2,500,000.00", usdtEquiv: "2,406.98 USDT", status: "active", lastActivity: "2 hours ago" },
-  { id: "WAL-002", user: "Chinedu Okonkwo", userId: "USR-001", currency: "USDT", availableBalance: "2,450.50 USDT", ledgerBalance: "2,450.50 USDT", usdtEquiv: "2,450.50 USDT", status: "active", lastActivity: "2 hours ago" },
-  { id: "WAL-003", user: "Amara Eze", userId: "USR-002", currency: "NGN", availableBalance: "₦890,000.00", ledgerBalance: "₦890,000.00", usdtEquiv: "874.38 USDT", status: "active", lastActivity: "5 hours ago" },
-  { id: "WAL-004", user: "Amara Eze", userId: "USR-002", currency: "USDC", availableBalance: "875.00 USDC", ledgerBalance: "875.00 USDC", usdtEquiv: "874.13 USDT", status: "active", lastActivity: "5 hours ago" },
-  { id: "WAL-005", user: "Ibrahim Musa", userId: "USR-003", currency: "NGN", availableBalance: "₦5,670,000.00", ledgerBalance: "₦5,670,000.00", usdtEquiv: "5,568.30 USDT", status: "frozen", lastActivity: "3 days ago" },
-  { id: "WAL-006", user: "Ibrahim Musa", userId: "USR-003", currency: "USDT", availableBalance: "5,500.00 USDT", ledgerBalance: "5,500.00 USDT", usdtEquiv: "5,500.00 USDT", status: "frozen", lastActivity: "3 days ago" },
-  { id: "WAL-007", user: "Folake Adeyemi", userId: "USR-004", currency: "NGN", availableBalance: "₦120,000.00", ledgerBalance: "₦120,000.00", usdtEquiv: "117.80 USDT", status: "active", lastActivity: "1 day ago" },
-  { id: "WAL-008", user: "Emeka Nwosu", userId: "USR-005", currency: "NGN", availableBalance: "₦15,890,000.00", ledgerBalance: "₦15,890,000.00", usdtEquiv: "15,607.40 USDT", status: "active", lastActivity: "30 mins ago" },
-  { id: "WAL-009", user: "Emeka Nwosu", userId: "USR-005", currency: "USDT", availableBalance: "15,600.00 USDT", ledgerBalance: "15,600.00 USDT", usdtEquiv: "15,600.00 USDT", status: "active", lastActivity: "30 mins ago" },
+  { id: "WAL-001", user: "Chinedu Okonkwo", userId: "USR-001", coin: "USDT", availableBalance: "2,450.50 USDT", ledgerBalance: "2,450.50 USDT", usdtEquiv: "2,450.50 USDT", status: "active", lastActivity: "2 hours ago" },
+  { id: "WAL-002", user: "Chinedu Okonkwo", userId: "USR-001", coin: "SOL", availableBalance: "12.45 SOL", ledgerBalance: "12.45 SOL", usdtEquiv: "1,818.00 USDT", status: "active", lastActivity: "2 hours ago" },
+  { id: "WAL-003", user: "Amara Eze", userId: "USR-002", coin: "USDC", availableBalance: "875.00 USDC", ledgerBalance: "875.00 USDC", usdtEquiv: "874.13 USDT", status: "active", lastActivity: "5 hours ago" },
+  { id: "WAL-004", user: "Amara Eze", userId: "USR-002", coin: "ETH", availableBalance: "0.85 ETH", ledgerBalance: "0.85 ETH", usdtEquiv: "2,956.30 USDT", status: "active", lastActivity: "5 hours ago" },
+  { id: "WAL-005", user: "Ibrahim Musa", userId: "USR-003", coin: "USDT", availableBalance: "5,500.00 USDT", ledgerBalance: "5,500.00 USDT", usdtEquiv: "5,500.00 USDT", status: "frozen", lastActivity: "3 days ago" },
+  { id: "WAL-006", user: "Ibrahim Musa", userId: "USR-003", coin: "ADA", availableBalance: "8,400.00 ADA", ledgerBalance: "8,400.00 ADA", usdtEquiv: "5,068.30 USDT", status: "frozen", lastActivity: "3 days ago" },
+  { id: "WAL-007", user: "Folake Adeyemi", userId: "USR-004", coin: "USDT", availableBalance: "117.80 USDT", ledgerBalance: "117.80 USDT", usdtEquiv: "117.80 USDT", status: "active", lastActivity: "1 day ago" },
+  { id: "WAL-008", user: "Emeka Nwosu", userId: "USR-005", coin: "USDT", availableBalance: "15,600.00 USDT", ledgerBalance: "15,600.00 USDT", usdtEquiv: "15,600.00 USDT", status: "active", lastActivity: "30 mins ago" },
+  { id: "WAL-009", user: "Emeka Nwosu", userId: "USR-005", coin: "SOL", availableBalance: "85.00 SOL", ledgerBalance: "85.00 SOL", usdtEquiv: "12,409.00 USDT", status: "active", lastActivity: "30 mins ago" },
 ];
 
-const currencyColors: Record<string, string> = {
-  NGN: "bg-success/10 text-success",
+const coinColors: Record<string, string> = {
   USDT: "bg-primary/10 text-primary",
   USDC: "bg-warning/10 text-warning",
+  SOL: "bg-success/10 text-success",
+  ETH: "bg-primary/10 text-primary",
+  ADA: "bg-warning/10 text-warning",
+  BTC: "bg-warning/10 text-warning",
 };
 
 export default function Wallets() {
@@ -44,7 +47,7 @@ export default function Wallets() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [adjustReason, setAdjustReason] = useState("");
 
-  const totalUsdtEquiv = "48,999.49 USDT";
+  const totalUsdtEquiv = "46,793.03 USDT";
   const frozenCount = wallets.filter(w => w.status === "frozen").length;
 
   return (
@@ -52,25 +55,25 @@ export default function Wallets() {
       <div className="page-header">
         <h1 className="page-title">Wallets & Ledger</h1>
         <p className="page-description">
-          Monitor and manage all user wallets — NGN, USDT, USDC. All totals shown in USDT equivalent.
+          Monitor and manage all user wallets — multi-coin. All totals shown in USDT equivalent.
         </p>
       </div>
 
       {/* Stats — USDT equiv as primary */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="metric-card border-primary/30">
-          <p className="metric-label">Total Platform Value</p>
+          <p className="metric-label">Total Custody Value</p>
           <p className="metric-value mt-1 text-primary">{totalUsdtEquiv}</p>
           <p className="text-xs text-muted-foreground mt-1">USDT equivalent (all wallets)</p>
         </div>
         <div className="metric-card">
-          <p className="metric-label">NGN Float</p>
-          <p className="metric-value mt-1">₦847.5M</p>
-          <p className="text-xs text-muted-foreground mt-1">≈ 832,018 USDT</p>
+          <p className="metric-label">USDT Float</p>
+          <p className="metric-value mt-1">23,668.30 USDT</p>
         </div>
         <div className="metric-card">
-          <p className="metric-label">USDT Float</p>
-          <p className="metric-value mt-1">524,875 USDT</p>
+          <p className="metric-label">Other Coins Float</p>
+          <p className="metric-value mt-1">23,124.73 USDT</p>
+          <p className="text-xs text-muted-foreground mt-1">SOL, ETH, ADA, USDC equiv</p>
         </div>
         <div className="metric-card border-destructive/30">
           <p className="metric-label">Frozen Wallets</p>
@@ -86,13 +89,15 @@ export default function Wallets() {
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Currency" />
+            <SelectValue placeholder="Coin" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Currencies</SelectItem>
-            <SelectItem value="ngn">NGN</SelectItem>
+            <SelectItem value="all">All Coins</SelectItem>
             <SelectItem value="usdt">USDT</SelectItem>
             <SelectItem value="usdc">USDC</SelectItem>
+            <SelectItem value="sol">SOL</SelectItem>
+            <SelectItem value="eth">ETH</SelectItem>
+            <SelectItem value="ada">ADA</SelectItem>
           </SelectContent>
         </Select>
         <Select defaultValue="all">
@@ -117,7 +122,7 @@ export default function Wallets() {
             <tr>
               <th>Wallet ID</th>
               <th>User</th>
-              <th>Currency</th>
+              <th>Coin</th>
               <th>Balance (USDT Equiv)</th>
               <th>Native Balance</th>
               <th>Status</th>
@@ -136,8 +141,8 @@ export default function Wallets() {
                   </div>
                 </td>
                 <td>
-                  <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", currencyColors[wallet.currency])}>
-                    {wallet.currency}
+                  <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", coinColors[wallet.coin] || "bg-muted text-muted-foreground")}>
+                    {wallet.coin}
                   </span>
                 </td>
                 <td className="font-semibold text-success">{wallet.usdtEquiv}</td>

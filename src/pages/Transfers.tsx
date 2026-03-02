@@ -20,10 +20,11 @@ const transfers = [
     id: "TRF-20241231-001",
     user: "Chinedu Okonkwo",
     userId: "USR-001",
+    country: "NG",
     direction: "send",
     channel: "Bank",
-    amount: "₦250,000",
-    currency: "NGN",
+    amountUsdt: "245.50 USDT",
+    fiatEquiv: "(~ ₦249,890)",
     provider: "OpenXSwitch",
     status: "completed",
     createdAt: "Dec 31, 2024 14:32:15",
@@ -36,14 +37,15 @@ const transfers = [
     id: "TRF-20241231-002",
     user: "Amara Eze",
     userId: "USR-002",
+    country: "KE",
     direction: "receive",
-    channel: "Bank",
-    amount: "₦180,000",
-    currency: "NGN",
+    channel: "Mobile Money",
+    amountUsdt: "176.80 USDT",
+    fiatEquiv: "(~ KES 24,398)",
     provider: "OpenXSwitch",
     status: "completed",
     createdAt: "Dec 31, 2024 13:45:22",
-    source: "GTBank Acct ***4521",
+    source: "M-Pesa ***4521",
     linkedWalletEvent: "WC-20241231-002",
     statusHistory: ["INITIATED", "CONFIRMED", "CREDITED"],
   },
@@ -51,14 +53,15 @@ const transfers = [
     id: "TRF-20241231-003",
     user: "Ibrahim Musa",
     userId: "USR-003",
+    country: "GH",
     direction: "send",
     channel: "Bank",
-    amount: "₦500,000",
-    currency: "NGN",
+    amountUsdt: "490.00 USDT",
+    fiatEquiv: "(~ GHS 7,742)",
     provider: "OpenXSwitch",
     status: "pending",
     createdAt: "Dec 31, 2024 12:18:44",
-    bank: "GTBank",
+    bank: "Ecobank Ghana",
     accountNumber: "0234567890",
     age: 35,
     statusHistory: ["INITIATED", "PROCESSING"],
@@ -67,10 +70,11 @@ const transfers = [
     id: "TRF-20241231-004",
     user: "Folake Adeyemi",
     userId: "USR-004",
+    country: "ZA",
     direction: "send",
     channel: "Mobile Money",
-    amount: "₦75,000",
-    currency: "NGN",
+    amountUsdt: "73.50 USDT",
+    fiatEquiv: "(~ ZAR 1,397)",
     provider: "OpenXSwitch",
     status: "completed",
     createdAt: "Dec 31, 2024 11:05:33",
@@ -81,10 +85,11 @@ const transfers = [
     id: "TRF-20241231-005",
     user: "Emeka Nwosu",
     userId: "USR-005",
+    country: "NG",
     direction: "send",
     channel: "Bank",
-    amount: "₦1,200,000",
-    currency: "NGN",
+    amountUsdt: "1,178.00 USDT",
+    fiatEquiv: "(~ ₦1,199,220)",
     provider: "OpenXSwitch",
     status: "failed",
     createdAt: "Dec 31, 2024 10:22:18",
@@ -97,10 +102,11 @@ const transfers = [
     id: "TRF-20241230-001",
     user: "Ngozi Obi",
     userId: "USR-006",
+    country: "KE",
     direction: "receive",
     channel: "Wallet",
-    amount: "₦320,000",
-    currency: "NGN",
+    amountUsdt: "314.00 USDT",
+    fiatEquiv: "(~ KES 43,332)",
     provider: "Yellow Card",
     status: "completed",
     createdAt: "Dec 30, 2024 16:45:11",
@@ -136,7 +142,7 @@ export default function Transfers() {
         <div className="page-header">
           <h1 className="page-title">Transfers & Payouts</h1>
           <p className="page-description">
-            Monitor and manage all platform transfers
+            Monitor and manage all platform transfers — amounts in USDT
           </p>
         </div>
         <Button variant="outline">
@@ -192,6 +198,18 @@ export default function Transfers() {
             </Select>
             <Select defaultValue="all">
               <SelectTrigger className="w-40">
+                <SelectValue placeholder="Country" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Countries</SelectItem>
+                <SelectItem value="NG">Nigeria</SelectItem>
+                <SelectItem value="KE">Kenya</SelectItem>
+                <SelectItem value="GH">Ghana</SelectItem>
+                <SelectItem value="ZA">South Africa</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select defaultValue="all">
+              <SelectTrigger className="w-40">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
@@ -214,9 +232,10 @@ export default function Transfers() {
                 <tr>
                   <th>Transfer ID</th>
                   <th>User</th>
+                  <th>Country</th>
                   <th>Direction</th>
                   <th>Channel</th>
-                  <th>Amount</th>
+                  <th>Amount (USDT)</th>
                   <th>Provider</th>
                   <th>Status</th>
                   <th>Created At</th>
@@ -241,6 +260,11 @@ export default function Transfers() {
                       </div>
                     </td>
                     <td>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                        {tx.country}
+                      </span>
+                    </td>
+                    <td>
                       <div className="flex items-center gap-2">
                         {tx.direction === "receive" ? (
                           <ArrowDownLeft className="h-4 w-4 text-success" />
@@ -262,8 +286,8 @@ export default function Transfers() {
                     </td>
                     <td>
                       <div>
-                        <p className="font-medium">{tx.amount}</p>
-                        <p className="text-xs text-muted-foreground">{tx.currency}</p>
+                        <p className="font-semibold">{tx.amountUsdt}</p>
+                        {tx.fiatEquiv && <p className="text-xs text-muted-foreground">{tx.fiatEquiv}</p>}
                       </div>
                     </td>
                     <td>
@@ -339,7 +363,8 @@ export default function Transfers() {
                 <tr>
                   <th>Transfer ID</th>
                   <th>User</th>
-                  <th>Amount</th>
+                  <th>Country</th>
+                  <th>Amount (USDT)</th>
                   <th>Destination</th>
                   <th>Age</th>
                   <th>SLA Status</th>
@@ -349,7 +374,7 @@ export default function Transfers() {
               <tbody>
                 {payoutQueue.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <td colSpan={8} className="text-center py-8 text-muted-foreground">
                       No pending payouts in queue
                     </td>
                   </tr>
@@ -365,7 +390,17 @@ export default function Transfers() {
                             <p className="text-xs text-muted-foreground">{tx.userId}</p>
                           </div>
                         </td>
-                        <td className="font-semibold">{tx.amount}</td>
+                        <td>
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted">
+                            {tx.country}
+                          </span>
+                        </td>
+                        <td>
+                          <div>
+                            <p className="font-semibold">{tx.amountUsdt}</p>
+                            {tx.fiatEquiv && <p className="text-xs text-muted-foreground">{tx.fiatEquiv}</p>}
+                          </div>
+                        </td>
                         <td>
                           <div>
                             <p className="font-medium">{tx.bank}</p>
@@ -446,29 +481,30 @@ export default function Transfers() {
                 {/* Amount */}
                 <div className="rounded-lg border border-border p-4">
                   <div className="text-center">
-                    <p className="text-2xl font-bold">{selectedTx.amount}</p>
-                    <p className="text-sm text-muted-foreground">{selectedTx.currency}</p>
+                    <p className="text-2xl font-bold">{selectedTx.amountUsdt}</p>
+                    {selectedTx.fiatEquiv && (
+                      <p className="text-sm text-muted-foreground">{selectedTx.fiatEquiv}</p>
+                    )}
                   </div>
                 </div>
 
-                {/* Status History for RECEIVE */}
+                {/* Status History */}
                 {selectedTx.statusHistory && (
                   <div className="space-y-3">
                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
                       Status Lifecycle
                     </h4>
                     <div className="flex items-center gap-2">
-                      {selectedTx.statusHistory.map((step, i) => (
+                      {selectedTx.statusHistory.map((status, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <span className={cn(
                             "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
-                            i === selectedTx.statusHistory!.length - 1
-                              ? selectedTx.status === "completed" ? "bg-success/10 text-success" : selectedTx.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"
-                              : "bg-muted text-muted-foreground"
+                            i < selectedTx.statusHistory.length - 1 || selectedTx.status === "completed" ? "bg-success/10 text-success" :
+                            selectedTx.status === "failed" ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"
                           )}>
-                            {step}
+                            {status}
                           </span>
-                          {i < selectedTx.statusHistory!.length - 1 && (
+                          {i < selectedTx.statusHistory.length - 1 && (
                             <span className="text-muted-foreground">→</span>
                           )}
                         </div>
@@ -477,81 +513,24 @@ export default function Transfers() {
                   </div>
                 )}
 
-                {/* Details Grid */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Transfer Information
-                  </h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Transfer ID</p>
-                      <p className="font-medium text-sm">{selectedTx.id}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Direction</p>
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
-                        selectedTx.direction === "receive" ? "bg-success/10 text-success" : "bg-primary/10 text-primary"
-                      )}>
-                        {selectedTx.direction.toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Channel</p>
-                      <p className="font-medium text-sm">{selectedTx.channel}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Provider</p>
-                      <span className={cn(
-                        "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
-                        selectedTx.provider === "OpenXSwitch" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
-                      )}>
-                        {selectedTx.provider}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">User</p>
-                      <p className="font-medium text-sm">{selectedTx.user}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">User ID</p>
-                      <p className="font-medium text-sm">{selectedTx.userId}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Created At</p>
-                      <p className="font-medium text-sm">{selectedTx.createdAt}</p>
-                    </div>
-                    {selectedTx.linkedWalletEvent && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Wallet Credit</p>
-                        <p className="font-medium text-sm font-mono text-primary">{selectedTx.linkedWalletEvent}</p>
-                      </div>
-                    )}
-                  </div>
+                {/* Details */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div><p className="text-xs text-muted-foreground">Transfer ID</p><p className="font-medium text-sm">{selectedTx.id}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Country</p><p className="font-medium text-sm">{selectedTx.country}</p></div>
+                  <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium text-sm">{selectedTx.user}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Channel</p><p className="font-medium text-sm">{selectedTx.channel}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Provider</p><p className="font-medium text-sm">{selectedTx.provider}</p></div>
+                  <div><p className="text-xs text-muted-foreground">Created At</p><p className="font-medium text-sm">{selectedTx.createdAt}</p></div>
                 </div>
 
-                {/* Source Info for RECEIVE */}
-                {selectedTx.direction === "receive" && selectedTx.source && (
+                {/* Bank Details */}
+                {selectedTx.bank && (
                   <div className="space-y-4">
                     <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Source
-                    </h4>
-                    <div className="rounded-lg border border-success/30 bg-success/5 p-4">
-                      <p className="font-medium">{selectedTx.source}</p>
-                      <p className="text-sm text-muted-foreground">via {selectedTx.provider}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Bank Info for SEND */}
-                {selectedTx.direction === "send" && selectedTx.bank && (
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                      Destination
+                      Bank Details
                     </h4>
                     <div className="rounded-lg border border-border p-4">
-                      <p className="font-medium">{selectedTx.bank}</p>
-                      <p className="text-sm text-muted-foreground">{selectedTx.accountNumber}</p>
+                      <p className="font-medium">{selectedTx.bank} — {selectedTx.accountNumber}</p>
                     </div>
                   </div>
                 )}
@@ -560,40 +539,35 @@ export default function Transfers() {
                 {selectedTx.failureReason && (
                   <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                     <p className="text-sm font-medium text-destructive">Failure Reason</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {selectedTx.failureReason}
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">{selectedTx.failureReason}</p>
                   </div>
                 )}
 
                 {/* Actions */}
-                {selectedTx.status === "failed" && (
-                  <Button className="w-full">
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Retry Payout
-                  </Button>
-                )}
                 {selectedTx.status === "pending" && (
                   <div className="space-y-4">
+                    <Textarea
+                      placeholder="Escalation / resolution note..."
+                      value={escalateNote}
+                      onChange={(e) => setEscalateNote(e.target.value)}
+                    />
                     <div className="flex gap-3">
                       <Button variant="outline" className="flex-1">
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Mark Resolved
+                        <RefreshCw className="mr-2 h-4 w-4" /> Retry
                       </Button>
-                      <Button variant="destructive" className="flex-1">
-                        <Flag className="mr-2 h-4 w-4" />
-                        Escalate
+                      <Button variant="outline" className="flex-1">
+                        <Flag className="mr-2 h-4 w-4" /> Escalate
                       </Button>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Escalation Note</p>
-                      <Textarea
-                        placeholder="Add a note for escalation..."
-                        value={escalateNote}
-                        onChange={(e) => setEscalateNote(e.target.value)}
-                      />
+                      <Button className="flex-1" disabled={!escalateNote}>
+                        <CheckCircle className="mr-2 h-4 w-4" /> Resolve
+                      </Button>
                     </div>
                   </div>
+                )}
+                {selectedTx.status === "failed" && (
+                  <Button className="w-full" variant="outline">
+                    <RefreshCw className="mr-2 h-4 w-4" /> Retry Transfer
+                  </Button>
                 )}
               </div>
             </>

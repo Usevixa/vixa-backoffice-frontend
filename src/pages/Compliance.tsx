@@ -16,7 +16,7 @@ const kycRequests = [
 ];
 
 const riskFlags = [
-  { id: "RISK-001", user: "Anonymous User", userId: "USR-099", type: "high_volume", description: "Unusual transaction volume — ₦15M in 24 hours", createdAt: "Dec 31, 2024 13:00", status: "open" },
+  { id: "RISK-001", user: "Anonymous User", userId: "USR-099", type: "high_volume", description: "Unusual transaction volume — 14,750 USDT in 24 hours", createdAt: "Dec 31, 2024 13:00", status: "open" },
   { id: "RISK-002", user: "Ibrahim Musa", userId: "USR-003", type: "frozen_account", description: "Account frozen due to suspicious activity patterns", createdAt: "Dec 29, 2024 10:00", status: "reviewing" },
 ];
 
