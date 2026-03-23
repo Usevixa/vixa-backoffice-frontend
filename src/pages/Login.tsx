@@ -4,12 +4,18 @@ import { Eye, EyeOff, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/context/AuthContext";
+import { getDeviceId } from "@/lib/deviceId";
+import {
+  useLoginMutation,
+  useVerifyOtpMutation,
+  useResendOtpMutation,
+} from "@/hooks/useAuthMutations";
 
 type Step = "credentials" | "otp";
 
+const deviceId = getDeviceId();
+
 export default function Login() {
-  const { login } = useAuth();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>("credentials");
@@ -17,33 +23,49 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleCredentials = async (e: React.FormEvent) => {
+  const loginMutation = useLoginMutation(() => {
+    setStep("otp");
+    setError("");
+  });
+
+  const verifyOtpMutation = useVerifyOtpMutation(() => {
+    navigate("/");
+  });
+
+  const resendOtpMutation = useResendOtpMutation();
+
+  // Derive loading state from active mutations
+  const loading =
+    loginMutation.isPending ||
+    verifyOtpMutation.isPending ||
+    resendOtpMutation.isPending;
+
+  const handleCredentials = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       setError("Please enter your email and password.");
       return;
     }
     setError("");
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 600));
-    setLoading(false);
-    setStep("otp");
+    loginMutation.mutate({ email, password, deviceId });
   };
 
-  const handleOtp = async (e: React.FormEvent) => {
+  const handleOtp = (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp) {
       setError("Please enter the OTP sent to your device.");
       return;
     }
     setError("");
-    setLoading(true);
-    await login(email, password);
-    setLoading(false);
-    navigate("/");
+    verifyOtpMutation.mutate({ email, otpCode: otp, deviceId });
+  };
+
+  const handleResendOtp = () => {
+    setOtp("");
+    setError("");
+    resendOtpMutation.mutate({ email });
   };
 
   return (
@@ -140,7 +162,8 @@ export default function Login() {
                 <button
                   type="button"
                   className="text-sm text-primary hover:underline"
-                  onClick={() => setOtp("")}
+                  onClick={handleResendOtp}
+                  disabled={loading}
                 >
                   Resend OTP
                 </button>

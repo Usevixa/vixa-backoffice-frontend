@@ -9,16 +9,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/context/AuthContext";
+import { useAuthStore } from "@/store/auth.store";
+import { logoutUser } from "@/services/auth.service";
 import { useNavigate } from "react-router-dom";
 
 export function Header() {
-  const { adminName, adminRole, logout } = useAuth();
+  const { user, logout } = useAuthStore();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
+  const adminName = user?.fullName ?? (`${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || "Admin");
+  const adminRole = user?.isSuperAdmin ? "Super Admin" : (user?.roles?.[0] ?? "Admin");
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      // API failure — proceed with local logout regardless.
+      // Logged in development only; no user-facing error shown.
+      if (import.meta.env.DEV) {
+        console.error("[logout] API call failed:", err);
+      }
+    } finally {
+      logout();
+      navigate("/login");
+    }
   };
 
   return (
