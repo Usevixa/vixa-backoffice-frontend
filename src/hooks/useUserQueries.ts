@@ -44,6 +44,11 @@ export function useUsers(filters?: UsersFilter) {
   if (filters?.KycStatus && filters.KycStatus !== "all") params.KycStatus = filters.KycStatus;
   if (filters?.RiskLevel && filters.RiskLevel !== "all") params.RiskLevel = filters.RiskLevel;
   if (filters?.WalletStatus && filters.WalletStatus !== "all") params.WalletStatus = filters.WalletStatus;
+  // Only include dates when both are provided — prevents partial date requests
+  if (filters?.DateFrom && filters?.DateTo) {
+    params.DateFrom = filters.DateFrom;
+    params.DateTo = filters.DateTo;
+  }
 
   return useQuery({
     queryKey: ["users", params] as const,

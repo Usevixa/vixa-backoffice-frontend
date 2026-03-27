@@ -30,6 +30,8 @@ export interface UsersFilter {
   KycStatus?: string;
   RiskLevel?: string;
   WalletStatus?: string;
+  DateFrom?: string;
+  DateTo?: string;
 }
 
 // Payload for PUT /api/v1/admin/users/{userId}/notes
