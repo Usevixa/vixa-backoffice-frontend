@@ -131,7 +131,7 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">User ID</p>
-                  <p className="font-medium font-mono text-sm">{user.userId}</p>
+                  <p className="font-medium font-mono text-sm">{user.userId.substring(0, 8)}****-****-****</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Phone</p>
@@ -446,13 +446,12 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
                               <td className="font-semibold text-sm">{tx.amount ?? "—"}</td>
                               <td>
                                 <StatusBadge
-                                  status={
-                                    ["completed", "confirmed", "credited"].includes(
-                                      (tx.status ?? "").toLowerCase()
-                                    )
-                                      ? "success"
-                                      : "error"
-                                  }
+                                  status={(() => {
+                                    const s = (tx.status ?? "").toLowerCase();
+                                    if (["completed", "confirmed", "credited"].includes(s)) return "success";
+                                    if (["processing", "pending", "leg1_pending"].includes(s)) return "warning";
+                                    return "error";
+                                  })()}
                                 >
                                   {tx.status}
                                 </StatusBadge>

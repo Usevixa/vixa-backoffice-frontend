@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  X,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,8 @@ export default function Users() {
   const [kycStatus, setKycStatus] = useState("all");
   const [riskLevel, setRiskLevel] = useState("all");
   const [walletStatus, setWalletStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   // Debounce search input — waits 400ms after the user stops typing
   useEffect(() => {
@@ -61,14 +64,31 @@ export default function Users() {
   // Reset to page 1 when any filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, kycStatus, riskLevel, walletStatus]);
+  }, [search, kycStatus, riskLevel, walletStatus, dateFrom, dateTo]);
 
   const { data: users = [], isLoading, isError } = useUsers({
     Search: search,
     KycStatus: kycStatus,
     RiskLevel: riskLevel,
     WalletStatus: walletStatus,
+    DateFrom: dateFrom || undefined,
+    DateTo: dateTo || undefined,
   });
+
+  const hasActiveFilters =
+    !!searchInput || kycStatus !== "all" || riskLevel !== "all" ||
+    walletStatus !== "all" || !!dateFrom || !!dateTo;
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setKycStatus("all");
+    setRiskLevel("all");
+    setWalletStatus("all");
+    setDateFrom("");
+    setDateTo("");
+    setCurrentPage(1);
+  };
 
   // Quick-action mutations for the table row dropdown
   const freezeWalletsMutation = useFreezeWallets();
@@ -95,52 +115,78 @@ export default function Users() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="space-y-3">
+        {/* Date range row — API only fires when both dates are set */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">From</span>
           <Input
-            type="search"
-            placeholder="Search by name, phone, user ID..."
-            className="pl-9"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            type="date"
+            className="w-40"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
           />
+          <span className="text-sm text-muted-foreground">To</span>
+          <Input
+            type="date"
+            className="w-40"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+              <X className="mr-1 h-3.5 w-3.5" />
+              Clear
+            </Button>
+          )}
         </div>
-        <Select value={kycStatus} onValueChange={setKycStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="KYC Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="verified">Verified</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={riskLevel} onValueChange={setRiskLevel}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Risk Level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Levels</SelectItem>
-            <SelectItem value="low">Low</SelectItem>
-            <SelectItem value="medium">Medium</SelectItem>
-            <SelectItem value="high">High</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={walletStatus} onValueChange={setWalletStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Wallet Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Wallets</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="frozen">Frozen</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="icon">
-          <Filter className="h-4 w-4" />
-        </Button>
+        {/* Other filters row */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by name, phone, user ID..."
+              className="pl-9"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+          <Select value={kycStatus} onValueChange={setKycStatus}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="KYC Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={riskLevel} onValueChange={setRiskLevel}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Risk Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Levels</SelectItem>
+              <SelectItem value="low">Low</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="high">High</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={walletStatus} onValueChange={setWalletStatus}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Wallet Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Wallets</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="frozen">Frozen</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon">
+            <Filter className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -189,10 +235,7 @@ export default function Users() {
                 onClick={() => handleViewUser(user)}
               >
                 <td>
-                  <div>
-                    <p className="font-medium text-foreground">{user.fullName}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{user.userId}</p>
-                  </div>
+                  <p className="font-medium text-foreground">{user.fullName}</p>
                 </td>
                 <td className="text-muted-foreground">{user.phone}</td>
                 <td>

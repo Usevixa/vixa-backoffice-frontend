@@ -324,12 +324,7 @@ export default function TransactionHistory() {
                     </span>
                   </td>
                   <td>
-                    <div>
-                      <p className="text-sm font-medium">{tx.userFullName}</p>
-                      <p className="text-xs text-muted-foreground font-mono">
-                        {tx.userId.substring(0, 8)}…
-                      </p>
-                    </div>
+                    <p className="text-sm font-medium">{tx.userFullName}</p>
                   </td>
                   <td className="font-medium text-sm">{tx.coinPair}</td>
                   <td>
