@@ -1,153 +1,103 @@
-import { useState } from "react";
-import { Search, Filter, ArrowDownLeft, Eye } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  ArrowDownLeft,
+  Eye,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useDeposits } from "@/hooks/useDepositQueries";
+import { DepositDetailsSheet } from "@/components/deposits/DepositDetailsSheet";
 
-// Yellow Card channel names per YC documentation
-const YC_CHANNELS = [
-  "Flutterwave",
-  "MTN Mobile Money",
-  "Airtel Money",
-  "Orange Money",
-  "MPESA",
-  "Remitly",
-  "Chipper Cash",
-  "Bank Transfer (YC)",
-];
-
-const deposits = [
-  {
-    id: "DEP-001",
-    user: "Chinedu Okonkwo",
-    userId: "USR-001",
-    country: "NG",
-    subWallet: "SUB-00142",
-    amountUsdt: "240.50 USDT",
-    fiatEquiv: "(~ ₦244,830)",
-    ycChannel: "MTN Mobile Money",
-    status: "credited",
-    ycRef: "YC-DEP-5523891",
-    oxsCreditRef: "OXS-RCV-8847291",
-    createdAt: "Dec 31, 2024 14:32",
-    timeline: [
-      { step: "YC DETECTED", done: true, time: "14:32:00" },
-      { step: "YC CONFIRMED", done: true, time: "14:32:45" },
-      { step: "CREDITED TO OXS SUB-WALLET", done: true, time: "14:33:10" },
-    ],
-  },
-  {
-    id: "DEP-002",
-    user: "Amara Eze",
-    userId: "USR-002",
-    country: "KE",
-    subWallet: "SUB-00089",
-    amountUsdt: "175.00 USDT",
-    fiatEquiv: "(~ KES 24,150)",
-    ycChannel: "MPESA",
-    status: "credited",
-    ycRef: "YC-DEP-5523890",
-    oxsCreditRef: "OXS-RCV-5523891",
-    createdAt: "Dec 31, 2024 13:45",
-    timeline: [
-      { step: "YC DETECTED", done: true, time: "13:45:00" },
-      { step: "YC CONFIRMED", done: true, time: "13:45:38" },
-      { step: "CREDITED TO OXS SUB-WALLET", done: true, time: "13:45:55" },
-    ],
-  },
-  {
-    id: "DEP-003",
-    user: "Emeka Nwosu",
-    userId: "USR-005",
-    country: "GH",
-    subWallet: "SUB-00213",
-    amountUsdt: "490.00 USDT",
-    fiatEquiv: "(~ GHS 7,742)",
-    ycChannel: "Bank Transfer (YC)",
-    status: "confirmed",
-    ycRef: "YC-DEP-9912345",
-    oxsCreditRef: null,
-    createdAt: "Dec 31, 2024 15:10",
-    timeline: [
-      { step: "YC DETECTED", done: true, time: "15:10:00" },
-      { step: "YC CONFIRMED", done: true, time: "15:10:52" },
-      { step: "CREDITED TO OXS SUB-WALLET", done: false, time: null },
-    ],
-  },
-  {
-    id: "DEP-004",
-    user: "Folake Adeyemi",
-    userId: "USR-004",
-    country: "ZA",
-    subWallet: null,
-    amountUsdt: "118.00 USDT",
-    fiatEquiv: "(~ ZAR 2,242)",
-    ycChannel: "Bank Transfer (YC)",
-    status: "failed",
-    ycRef: "YC-DEP-5231987",
-    oxsCreditRef: null,
-    createdAt: "Dec 31, 2024 10:22",
-    failureReason: "Yellow Card: Transaction rejected — account flagged by operator",
-    timeline: [
-      { step: "YC DETECTED", done: true, time: "10:22:00" },
-      { step: "YC CONFIRMED", done: false, time: null },
-      { step: "CREDITED TO OXS SUB-WALLET", done: false, time: null },
-    ],
-  },
-  {
-    id: "DEP-005",
-    user: "Ngozi Obi",
-    userId: "USR-006",
-    country: "KE",
-    subWallet: "SUB-00078",
-    amountUsdt: "305.00 USDT",
-    fiatEquiv: "(~ KES 42,090)",
-    ycChannel: "Chipper Cash",
-    status: "credited",
-    ycRef: "YC-DEP-5523880",
-    oxsCreditRef: "OXS-RCV-5523880",
-    createdAt: "Dec 30, 2024 16:45",
-    timeline: [
-      { step: "YC DETECTED", done: true, time: "16:45:00" },
-      { step: "YC CONFIRMED", done: true, time: "16:45:40" },
-      { step: "CREDITED TO OXS SUB-WALLET", done: true, time: "16:46:02" },
-    ],
-  },
-];
-
-const statusConfig = {
-  detected: "warning",
-  confirmed: "info",
-  credited: "success",
-  failed: "error",
-} as const;
+function statusVariant(status: string): "success" | "warning" | "error" {
+  const s = status.toLowerCase();
+  if (["credited", "completed", "confirmed", "complete"].includes(s)) return "success";
+  if (["processing", "pending", "detected"].includes(s)) return "warning";
+  return "error";
+}
 
 export default function Deposits() {
-  const [selectedDeposit, setSelectedDeposit] = useState<typeof deposits[0] | null>(null);
+  const [selectedDepositId, setSelectedDepositId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
 
-  const credited = deposits.filter(d => d.status === "credited").length;
-  const pending = deposits.filter(d => d.status === "detected" || d.status === "confirmed").length;
-  const failed = deposits.filter(d => d.status === "failed").length;
-  const successRate = (((deposits.length - failed) / deposits.length) * 100).toFixed(1);
+  // Filter state
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [asset, setAsset] = useState("all");
+  const [network, setNetwork] = useState("all");
+  const [status, setStatus] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // Debounce search — waits 400ms after the user stops typing
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  // Reset to page 1 when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, asset, network, status, dateFrom, dateTo]);
+
+  const { data, isLoading, isError } = useDeposits({
+    Search: search,
+    Asset: asset,
+    Network: network,
+    Status: status,
+    DateFrom: dateFrom || undefined,
+    DateTo: dateTo || undefined,
+    PageNo: currentPage,
+    PageSize: pageSize,
+  });
+
+  const deposits = data?.items ?? [];
+  const stats = data?.stats;
+  const totalPages = data?.totalPages ?? 1;
+  const totalCount = data?.totalCount ?? 0;
+
+  const hasActiveFilters =
+    !!searchInput || asset !== "all" || network !== "all" ||
+    status !== "all" || !!dateFrom || !!dateTo;
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setAsset("all");
+    setNetwork("all");
+    setStatus("all");
+    setDateFrom("");
+    setDateTo("");
+    setCurrentPage(1);
+  };
 
   return (
     <div className="space-y-6">
-      <div className="page-header">
-        <div>
+      <div className="flex items-center justify-between">
+        <div className="page-header">
           <h1 className="page-title">Deposits (Network In)</h1>
           <p className="page-description">
-            USDT (Solana) deposits via Yellow Card → credited into OpenXSwitch sub-wallets
+            USDT deposits via Yellow Card → credited into OpenXSwitch sub-wallets
           </p>
         </div>
-        <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <div className="h-2 w-2 rounded-full bg-success animate-pulse" />
-          Fixed route: Yellow Card → OpenXSwitch sub-wallet · Asset: USDT
+          Yellow Card → OpenXSwitch sub-wallet · Asset: USDT
         </div>
       </div>
 
@@ -156,54 +106,109 @@ export default function Deposits() {
         <div className="metric-card border-success/30">
           <div className="flex items-center gap-2">
             <ArrowDownLeft className="h-4 w-4 text-success" />
-            <p className="metric-label">Credited Today</p>
+            <p className="metric-label">Total Deposits</p>
           </div>
-          <p className="metric-value mt-1 text-success">{credited}</p>
-          <p className="text-xs text-muted-foreground mt-1">deposits successful</p>
+          <p className="metric-value mt-1 text-success">
+            {stats ? `${Number(stats.totalAmount).toFixed(2)} USDT` : "—"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {stats ? `${stats.totalCount} deposits` : ""}
+          </p>
+        </div>
+        <div className="metric-card">
+          <p className="metric-label">Confirmed / Credited</p>
+          <p className="metric-value mt-1 text-success">{stats?.completedCount ?? "—"}</p>
+          {stats && stats.completedTodayCount > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">{stats.completedTodayCount} today</p>
+          )}
         </div>
         <div className="metric-card border-warning/30">
-          <p className="metric-label">Pending Credit</p>
-          <p className="metric-value mt-1 text-warning">{pending}</p>
-          <p className="text-xs text-muted-foreground mt-1">awaiting OXS credit</p>
+          <p className="metric-label">Processing</p>
+          <p className="metric-value mt-1 text-warning">{stats?.pendingCount ?? "—"}</p>
+          {stats && stats.slaBreachCount > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">{stats.slaBreachCount} SLA breach</p>
+          )}
         </div>
         <div className="metric-card border-destructive/30">
           <p className="metric-label">Failed (24h)</p>
-          <p className="metric-value mt-1 text-destructive">{failed}</p>
-        </div>
-        <div className="metric-card">
-          <p className="metric-label">Success Rate</p>
-          <p className="metric-value mt-1 text-success">{successRate}%</p>
+          <p className="metric-value mt-1 text-destructive">{stats?.failed24hCount ?? "—"}</p>
+          {stats && stats.successRate > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">{stats.successRate}% success rate</p>
+          )}
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input type="search" placeholder="Search deposit ID, user, YC ref, OXS ref..." className="pl-9" />
+      <div className="space-y-3">
+        {/* Date range row */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">From</span>
+          <Input
+            type="date"
+            className="w-40"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+          <span className="text-sm text-muted-foreground">To</span>
+          <Input
+            type="date"
+            className="w-40"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+              <X className="mr-1 h-3.5 w-3.5" />
+              Clear
+            </Button>
+          )}
         </div>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="YC Channel" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Channels</SelectItem>
-            {YC_CHANNELS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select defaultValue="all">
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="detected">Detected</SelectItem>
-            <SelectItem value="confirmed">Confirmed</SelectItem>
-            <SelectItem value="credited">Credited</SelectItem>
-            <SelectItem value="failed">Failed</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="outline" size="icon"><Filter className="h-4 w-4" /></Button>
+        {/* Other filters row */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search user, deposit ref, YC ref, OXS ref..."
+              className="pl-9"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+          <Select value={asset} onValueChange={setAsset}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Asset" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Assets</SelectItem>
+              <SelectItem value="USDT">USDT</SelectItem>
+              <SelectItem value="USDC">USDC</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={network} onValueChange={setNetwork}>
+            <SelectTrigger className="w-36">
+              <SelectValue placeholder="Network" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Networks</SelectItem>
+              <SelectItem value="SOL">SOL</SelectItem>
+              <SelectItem value="ETH">ETH</SelectItem>
+              <SelectItem value="TRX">TRX</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+              <SelectItem value="confirmed">Confirmed</SelectItem>
+              <SelectItem value="credited">Credited</SelectItem>
+              <SelectItem value="failed">Failed</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Table */}
@@ -211,30 +216,64 @@ export default function Deposits() {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Deposit ID</th>
+              <th>Timestamp</th>
               <th>User / Sub-wallet</th>
               <th>Country</th>
               <th>YC Channel</th>
+              <th>Asset / Network</th>
               <th>Amount (USDT)</th>
               <th>Status</th>
-              <th>Yellow Card Ref</th>
-              <th>OXS Credit Ref</th>
-              <th>Timestamp</th>
+              <th>YC Reference</th>
+              <th>OXS Reference</th>
               <th className="text-right">View</th>
             </tr>
           </thead>
           <tbody>
+            {isLoading && (
+              <tr>
+                <td colSpan={10} className="py-12">
+                  <div className="flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                </td>
+              </tr>
+            )}
+            {isError && (
+              <tr>
+                <td colSpan={10} className="py-12 text-center text-sm text-destructive">
+                  Failed to load deposits. Please try again.
+                </td>
+              </tr>
+            )}
+            {!isLoading && !isError && deposits.length === 0 && (
+              <tr>
+                <td colSpan={10} className="py-12 text-center text-sm text-muted-foreground">
+                  No deposits found.
+                </td>
+              </tr>
+            )}
             {deposits.map((dep) => (
               <tr
                 key={dep.id}
-                className={cn("cursor-pointer", dep.status === "failed" && "bg-destructive/5")}
-                onClick={() => { setSelectedDeposit(dep); setSheetOpen(true); }}
+                className={cn(
+                  "cursor-pointer",
+                  statusVariant(dep.status) === "error" && "bg-destructive/5"
+                )}
+                onClick={() => { setSelectedDepositId(dep.id); setSheetOpen(true); }}
               >
-                <td className="font-mono text-sm font-medium text-success">{dep.id}</td>
+                <td className="text-muted-foreground text-sm">
+                  {new Date(dep.createdAt).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </td>
                 <td>
                   <div>
-                    <p className="font-medium">{dep.user}</p>
-                    <p className="text-xs text-muted-foreground font-mono">{dep.subWallet ?? dep.userId}</p>
+                    <p className="font-medium text-sm">{dep.userFullName}</p>
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {dep.subwalletId.substring(0, 10)}…
+                    </p>
                   </div>
                 </td>
                 <td>
@@ -248,19 +287,38 @@ export default function Deposits() {
                   </span>
                 </td>
                 <td>
-                  <p className="font-semibold text-success">{dep.amountUsdt}</p>
-                  {dep.fiatEquiv && <p className="text-xs text-muted-foreground">{dep.fiatEquiv}</p>}
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
+                    {dep.asset}
+                  </span>
+                  <span className="ml-1 text-xs text-muted-foreground">{dep.network}</span>
                 </td>
                 <td>
-                  <StatusBadge status={statusConfig[dep.status as keyof typeof statusConfig]}>
-                    {dep.status}
+                  <p className="font-semibold text-sm text-success">
+                    {Number(dep.amountUsdt).toFixed(2)}
+                  </p>
+                  {dep.amountNgn > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      ≈ ₦{Number(dep.amountNgn).toLocaleString()}
+                    </p>
+                  )}
+                </td>
+                <td>
+                  <StatusBadge status={statusVariant(dep.status)}>
+                    {dep.statusDisplay ?? dep.status}
                   </StatusBadge>
                 </td>
-                <td className="font-mono text-xs text-muted-foreground">{dep.ycRef}</td>
-                <td className="font-mono text-xs text-muted-foreground">{dep.oxsCreditRef ?? "—"}</td>
-                <td className="text-muted-foreground text-sm">{dep.createdAt}</td>
+                <td className="font-mono text-xs text-muted-foreground max-w-[160px] truncate">
+                  {dep.ycReference}
+                </td>
+                <td className="font-mono text-xs text-muted-foreground max-w-[160px] truncate">
+                  {dep.oxsReference ?? "—"}
+                </td>
                 <td className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <Button size="sm" variant="ghost" onClick={() => { setSelectedDeposit(dep); setSheetOpen(true); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => { setSelectedDepositId(dep.id); setSheetOpen(true); }}
+                  >
                     <Eye className="h-4 w-4" />
                   </Button>
                 </td>
@@ -270,80 +328,55 @@ export default function Deposits() {
         </table>
       </div>
 
-      {/* Detail Sheet */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-[520px] overflow-y-auto">
-          {selectedDeposit && (
-            <>
-              <SheetHeader>
-                <SheetTitle>Deposit — {selectedDeposit.id}</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-6">
-                {/* Amount */}
-                <div className="rounded-lg border border-border p-4 text-center">
-                  <p className="text-xs text-muted-foreground">Amount Deposited</p>
-                  <p className="text-3xl font-bold text-success mt-1">{selectedDeposit.amountUsdt}</p>
-                  <p className="text-xs text-muted-foreground mt-1">USDT via {selectedDeposit.ycChannel}</p>
-                  <div className="mt-2">
-                    <StatusBadge status={statusConfig[selectedDeposit.status as keyof typeof statusConfig]}>
-                      {selectedDeposit.status.toUpperCase()}
-                    </StatusBadge>
-                  </div>
-                </div>
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">
+          {totalCount === 0
+            ? "0"
+            : `${(currentPage - 1) * pageSize + 1}–${Math.min(
+                currentPage * pageSize,
+                totalCount
+              )}`}{" "}
+          of {totalCount}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Prev
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <Button
+              key={p}
+              variant={currentPage === p ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentPage(p)}
+              className="w-8 px-0"
+            >
+              {p}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-                {/* End-to-end Timeline */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">End-to-End Timeline</h4>
-                  <div className="text-xs text-muted-foreground mb-2">Yellow Card → OpenXSwitch sub-wallet credit chain</div>
-                  {selectedDeposit.timeline.map((t, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className={cn(
-                        "h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0",
-                        t.done ? "bg-success text-success-foreground" : "bg-muted text-muted-foreground"
-                      )}>
-                        {t.done ? "✓" : i + 1}
-                      </div>
-                      <span className={cn("text-sm font-medium flex-1", t.done ? "text-foreground" : "text-muted-foreground")}>{t.step}</span>
-                      {t.time && <span className="text-xs text-muted-foreground font-mono">{t.time}</span>}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Provider References */}
-                <div className="rounded-lg bg-muted/50 p-4 space-y-3">
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Provider References</h4>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">Yellow Card Ref</span>
-                      <span className="font-mono text-sm font-medium text-warning">{selectedDeposit.ycRef}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">OXS Credit Ref</span>
-                      <span className="font-mono text-sm font-medium text-primary">{selectedDeposit.oxsCreditRef ?? "Pending"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Details */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div><p className="text-xs text-muted-foreground">User</p><p className="font-medium">{selectedDeposit.user}</p></div>
-                  <div><p className="text-xs text-muted-foreground">User ID</p><p className="font-mono text-sm">{selectedDeposit.userId}</p></div>
-                  <div><p className="text-xs text-muted-foreground">Sub-wallet</p><p className="font-mono text-sm">{selectedDeposit.subWallet ?? "—"}</p></div>
-                  <div><p className="text-xs text-muted-foreground">YC Channel</p><p className="font-medium">{selectedDeposit.ycChannel}</p></div>
-                  <div><p className="text-xs text-muted-foreground">Created At</p><p className="font-medium">{selectedDeposit.createdAt}</p></div>
-                </div>
-
-                {selectedDeposit.failureReason && (
-                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-                    <p className="text-sm font-medium text-destructive">Failure Reason</p>
-                    <p className="text-sm text-muted-foreground mt-1">{selectedDeposit.failureReason}</p>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <DepositDetailsSheet
+        depositId={selectedDepositId}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   );
 }
