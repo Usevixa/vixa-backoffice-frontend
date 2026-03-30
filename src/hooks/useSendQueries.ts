@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getSends, getSendById } from "@/services/send.service";
-import { SendDetail, SendListResult, SendsFilter } from "@/types/send";
+import { getSends, getSendById, getSendStats } from "@/services/send.service";
+import { SendDetail, SendListResult, SendStats, SendsFilter } from "@/types/send";
 
 // ---------------------------------------------------------------------------
 // Queries
@@ -22,12 +22,19 @@ export function useSends(filters: SendsFilter) {
     queryFn: () => getSends(params),
     select: (data: unknown): SendListResult => ({
       items: ((data as any)?.data?.items ?? []),
-      stats: (data as any)?.data?.stats ?? {},
       totalCount: (data as any)?.data?.totalCount ?? 0,
       pageNo: (data as any)?.data?.pageNo ?? 1,
       pageSize: (data as any)?.data?.pageSize ?? 15,
       totalPages: Math.max(1, (data as any)?.data?.totalPages ?? 1),
     }),
+  });
+}
+
+export function useSendStats() {
+  return useQuery({
+    queryKey: ["send-stats"] as const,
+    queryFn: getSendStats,
+    select: (data: unknown) => (data as any)?.data as SendStats,
   });
 }
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDeposits, getDepositById } from "@/services/deposit.service";
-import { DepositDetail, DepositListResult, DepositsFilter } from "@/types/deposit";
+import { getDeposits, getDepositById, getDepositStats } from "@/services/deposit.service";
+import { DepositDetail, DepositListResult, DepositStats, DepositsFilter } from "@/types/deposit";
 
 // ---------------------------------------------------------------------------
 // Queries
@@ -22,12 +22,19 @@ export function useDeposits(filters: DepositsFilter) {
     queryFn: () => getDeposits(params),
     select: (data: unknown): DepositListResult => ({
       items: ((data as any)?.data?.items ?? []),
-      stats: (data as any)?.data?.stats ?? {},
       totalCount: (data as any)?.data?.totalCount ?? 0,
       pageNo: (data as any)?.data?.pageNo ?? 1,
       pageSize: (data as any)?.data?.pageSize ?? 15,
       totalPages: Math.max(1, (data as any)?.data?.totalPages ?? 1),
     }),
+  });
+}
+
+export function useDepositStats() {
+  return useQuery({
+    queryKey: ["deposit-stats"] as const,
+    queryFn: getDepositStats,
+    select: (data: unknown) => (data as any)?.data as DepositStats,
   });
 }
 
