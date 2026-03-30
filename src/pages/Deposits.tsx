@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
-import { useDeposits } from "@/hooks/useDepositQueries";
+import { useDeposits, useDepositStats } from "@/hooks/useDepositQueries";
 import { DepositDetailsSheet } from "@/components/deposits/DepositDetailsSheet";
 
 function statusVariant(status: string): "success" | "warning" | "error" {
@@ -66,8 +66,9 @@ export default function Deposits() {
     PageSize: pageSize,
   });
 
+  const { data: stats } = useDepositStats();
+
   const deposits = data?.items ?? [];
-  const stats = data?.stats;
   const totalPages = data?.totalPages ?? 1;
   const totalCount = data?.totalCount ?? 0;
 

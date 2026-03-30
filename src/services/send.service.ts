@@ -19,3 +19,11 @@ export async function getSendById(id: number): Promise<unknown> {
   const response = await api.get(`/api/v1/admin/sends/${id}`);
   return response?.data;
 }
+
+/**
+ * GET /api/v1/admin/sends/stats
+ */
+export async function getSendStats(): Promise<unknown> {
+  const response = await api.get("/api/v1/admin/sends/stats");
+  return response?.data;
+}

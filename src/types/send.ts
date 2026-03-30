@@ -73,7 +73,6 @@ export interface SendsFilter {
 // Paginated list response shape extracted from data envelope
 export interface SendListResult {
   items: Send[];
-  stats: SendStats;
   totalCount: number;
   pageNo: number;
   pageSize: number;

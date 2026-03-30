@@ -78,7 +78,6 @@ export interface DepositsFilter {
 // Paginated list response shape extracted from data envelope
 export interface DepositListResult {
   items: Deposit[];
-  stats: DepositStats;
   totalCount: number;
   pageNo: number;
   pageSize: number;

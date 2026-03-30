@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
-import { useSends } from "@/hooks/useSendQueries";
+import { useSends, useSendStats } from "@/hooks/useSendQueries";
 import { SendDetailsSheet } from "@/components/sends/SendDetailsSheet";
 
 const assetColors: Record<string, string> = {
@@ -77,8 +77,9 @@ export default function OxsSend() {
     PageSize: pageSize,
   });
 
+  const { data: stats } = useSendStats();
+
   const sends = data?.items ?? [];
-  const stats = data?.stats;
   const totalPages = data?.totalPages ?? 1;
   const totalCount = data?.totalCount ?? 0;
 
