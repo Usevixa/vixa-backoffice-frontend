@@ -23,16 +23,16 @@ const navigation = [
   { name: "Users", href: "/users", icon: Users },
   { name: "Wallets (OpenXSwitch)", href: "/wallets", icon: Building2 },
   { name: "Send (OpenXSwitch)", href: "/oxs-send", icon: ArrowUpRight },
-  { name: "Receive (OpenXSwitch)", href: "/oxs-receive", icon: ArrowDownLeft },
+  { name: "Receive (OpenXSwitch)", href: "/oxs-receive", icon: ArrowDownLeft, disabled: true },
   { name: "Swap (OpenXSwitch)", href: "/oxs-swap", icon: RefreshCw },
   { name: "Deposits (Network In)", href: "/deposits", icon: ArrowDownLeft },
   { name: "Withdrawals (Network Out)", href: "/withdrawals", icon: ArrowUpRight },
   { name: "Transaction History", href: "/transaction-history", icon: History },
-  { name: "Rates & Markups", href: "/rates", icon: Percent },
-  { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook },
-  { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale },
-  { name: "Admin Roles & Audit Trail", href: "/admin-roles", icon: UserCog },
-  { name: "System Settings", href: "/settings", icon: Settings },
+  { name: "Rates & Markups", href: "/rates", icon: Percent, disabled: true },
+  { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook, disabled: true },
+  { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale, disabled: true },
+  { name: "Admin Roles & Audit Trail", href: "/admin-roles", icon: UserCog, disabled: true },
+  { name: "System Settings", href: "/settings", icon: Settings, disabled: true },
 ];
 
 export function Sidebar() {
@@ -71,18 +71,31 @@ export function Sidebar() {
               const isActive = location.pathname === item.href;
               return (
                 <li key={item.name}>
-                  <NavLink
-                    to={item.href}
-                    className={cn(
-                      "nav-item",
-                      isActive ? "nav-item-active" : "nav-item-inactive",
-                      collapsed && "justify-center px-2"
-                    )}
-                    title={collapsed ? item.name : undefined}
-                  >
-                    <item.icon className="h-5 w-5 flex-shrink-0" />
-                    {!collapsed && <span>{item.name}</span>}
-                  </NavLink>
+                  {item.disabled ? (
+                    <span
+                      className={cn(
+                        "nav-item nav-item-inactive opacity-40 cursor-not-allowed",
+                        collapsed && "justify-center px-2"
+                      )}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && <span>{item.name}</span>}
+                    </span>
+                  ) : (
+                    <NavLink
+                      to={item.href}
+                      className={cn(
+                        "nav-item",
+                        isActive ? "nav-item-active" : "nav-item-inactive",
+                        collapsed && "justify-center px-2"
+                      )}
+                      title={collapsed ? item.name : undefined}
+                    >
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!collapsed && <span>{item.name}</span>}
+                    </NavLink>
+                  )}
                 </li>
               );
             })}
