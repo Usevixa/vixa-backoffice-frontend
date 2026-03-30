@@ -23,6 +23,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDashboardOverview } from "@/hooks/useDashboardQueries";
+import { MoneyFlowItem } from "@/types/dashboard";
 
 const durationLabels: Record<string, string> = {
   today: "Today",
@@ -42,8 +44,30 @@ function SectionLabel({ icon: Icon, label }: { icon: React.ElementType; label: s
   );
 }
 
+function moneyFlowChange(item: MoneyFlowItem, label: string): { change: string; changeType: "positive" | "negative" | "neutral" } {
+  if (item.changePercent !== null) {
+    const pct = Number(item.changePercent);
+    return {
+      change: pct >= 0 ? `+${pct.toFixed(1)}% from last period` : `${pct.toFixed(1)}% from last period`,
+      changeType: pct > 0 ? "positive" : pct < 0 ? "negative" : "neutral",
+    };
+  }
+  return {
+    change: `${item.count} ${label}`,
+    changeType: "neutral",
+  };
+}
+
 export default function Dashboard() {
   const [duration, setDuration] = useState("24h");
+
+  const { data, isLoading } = useDashboardOverview(duration);
+
+  const moneyFlow = data?.moneyFlow;
+  const health = data?.platformHealth;
+  const alerts = data?.alerts;
+  const volumeChart = data?.volumeChart ?? [];
+  const recentTransactions = data?.recentTransactions ?? [];
 
   return (
     <div className="space-y-8">
@@ -76,33 +100,29 @@ export default function Dashboard() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <MetricCard
             title="Deposits Volume"
-            value="83,420 USDT"
-            change="512 deposits"
-            changeType="neutral"
+            value={moneyFlow ? `${Number(moneyFlow.deposits.volumeUsdt).toFixed(2)} USDT` : "—"}
+            {...(moneyFlow ? moneyFlowChange(moneyFlow.deposits, "deposits") : { change: undefined, changeType: "neutral" })}
             icon={ArrowDownLeft}
             iconColor="text-success"
           />
           <MetricCard
             title="Withdrawals Volume"
-            value="71,050 USDT"
-            change="847 withdrawals"
-            changeType="neutral"
+            value={moneyFlow ? `${Number(moneyFlow.withdrawals.volumeUsdt).toFixed(2)} USDT` : "—"}
+            {...(moneyFlow ? moneyFlowChange(moneyFlow.withdrawals, "withdrawals") : { change: undefined, changeType: "neutral" })}
             icon={ArrowUpRight}
             iconColor="text-primary"
           />
           <MetricCard
             title="Swaps Volume"
-            value="41,750 USDT"
-            change="288 swaps"
-            changeType="neutral"
+            value={moneyFlow ? `${Number(moneyFlow.swaps.volumeUsdt).toFixed(2)} USDT` : "—"}
+            {...(moneyFlow ? moneyFlowChange(moneyFlow.swaps, "swaps") : { change: undefined, changeType: "neutral" })}
             icon={RefreshCw}
             iconColor="text-warning"
           />
           <MetricCard
             title="Markup Revenue"
-            value="2,340 USDT"
-            change="+15.7% from last period"
-            changeType="positive"
+            value={moneyFlow ? `${Number(moneyFlow.markupRevenue.volumeUsdt).toFixed(2)} USDT` : "—"}
+            {...(moneyFlow ? moneyFlowChange(moneyFlow.markupRevenue, "transactions") : { change: undefined, changeType: "neutral" })}
             icon={TrendingUp}
             iconColor="text-success"
           />
@@ -115,22 +135,20 @@ export default function Dashboard() {
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           <MetricCard
             title="Total Users"
-            value="12,847"
-            change="+8.2% this period"
-            changeType="positive"
+            value={health ? String(health.totalUsers) : "—"}
             icon={Users}
           />
           <MetricCard
             title="Verified Users"
-            value="9,234"
-            change="71.8% rate"
+            value={health ? String(health.verifiedUsers) : "—"}
+            change={health ? `${Number(health.verifiedRate).toFixed(1)}% verified` : undefined}
             changeType="neutral"
             icon={ShieldCheck}
             iconColor="text-success"
           />
           <MetricCard
             title="Total Wallet Value"
-            value="650,215 USDT"
+            value={health ? `${Number(health.totalWalletValueUsdt).toFixed(2)} USDT` : "—"}
             change="All coins equiv"
             changeType="neutral"
             icon={Wallet}
@@ -138,16 +156,16 @@ export default function Dashboard() {
           />
           <MetricCard
             title="Failed Transactions"
-            value="23"
-            change="0.8% failure rate"
-            changeType="negative"
+            value={health ? String(health.failedTransactions24h) : "—"}
+            change={health ? `${Number(health.failureRate24h).toFixed(1)}% failure rate` : undefined}
+            changeType={health && health.failedTransactions24h > 0 ? "negative" : "neutral"}
             icon={AlertTriangle}
             iconColor="text-destructive"
           />
           <MetricCard
             title="Pending Withdrawals"
-            value="47"
-            change="8,400 USDT queued"
+            value={health ? String(health.pendingWithdrawals) : "—"}
+            change={health ? `${Number(health.pendingWithdrawalsUsdt).toFixed(2)} USDT queued` : undefined}
             changeType="neutral"
             icon={Clock}
             iconColor="text-warning"
@@ -159,34 +177,34 @@ export default function Dashboard() {
       <div className="space-y-3">
         <SectionLabel icon={AlertTriangle} label="Active Alerts" />
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <AlertCard
-            type="error"
-            title="3 Withdrawals Stuck"
-            description="Pending >30 min — SLA breach"
-            action="Investigate"
-            onAction={() => {}}
-          />
-          <AlertCard
-            type="warning"
-            title="5 Webhook Failures"
-            description="Yellow Card: 3, OpenXSwitch: 2"
-            action="View Logs"
-            onAction={() => {}}
-          />
-          <AlertCard
-            type="info"
-            title="KYC Queue Backlog"
-            description="8 pending reviews"
-            action="Review"
-            onAction={() => {}}
-          />
-          <AlertCard
-            type="warning"
-            title="Swap Imbalance"
-            description="2 debits without matching credits"
-            action="Reconcile"
-            onAction={() => {}}
-          />
+          {alerts ? (
+            [alerts.withdrawalsStuck, alerts.webhookFailures, alerts.kycQueueBacklog, alerts.swapImbalance].map((alert) => (
+              <AlertCard
+                key={alert.key}
+                type={alert.severity}
+                title={alert.title}
+                description={alert.description}
+                action="Investigate"
+                onAction={() => {}}
+              />
+            ))
+          ) : (
+            [
+              { key: "withdrawals_stuck", title: "Withdrawals Stuck", description: "—", severity: "info" as const },
+              { key: "webhook_failures", title: "Webhook Failures", description: "—", severity: "info" as const },
+              { key: "kyc_queue", title: "KYC Queue", description: "—", severity: "info" as const },
+              { key: "swap_imbalance", title: "Swap Imbalance", description: "—", severity: "info" as const },
+            ].map((alert) => (
+              <AlertCard
+                key={alert.key}
+                type={alert.severity}
+                title={alert.title}
+                description={alert.description}
+                action="Investigate"
+                onAction={() => {}}
+              />
+            ))
+          )}
         </div>
       </div>
 
@@ -194,8 +212,8 @@ export default function Dashboard() {
       <div className="space-y-3">
         <SectionLabel icon={TrendingUp} label="Activity & Transactions" />
         <div className="grid gap-6 lg:grid-cols-2">
-          <TransactionChart />
-          <RecentTransactions />
+          <TransactionChart data={volumeChart} isLoading={isLoading} />
+          <RecentTransactions data={recentTransactions} isLoading={isLoading} />
         </div>
       </div>
     </div>
