@@ -158,8 +158,8 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
                       className={cn(
                         "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
                         user.isFlagged
-                          ? "bg-muted text-foreground"
-                          : "bg-destructive/10 text-destructive"
+                          ? "bg-destructive/10 text-destructive"
+                          : "bg-muted text-foreground"
                       )}
                     >
                       {user.isFlagged ? "Flagged" : "Not Flagged"}

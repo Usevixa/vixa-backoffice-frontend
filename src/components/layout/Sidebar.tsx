@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   History,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -28,6 +29,7 @@ const navigation = [
   { name: "Deposits (Network In)", href: "/deposits", icon: ArrowDownLeft },
   { name: "Withdrawals (Network Out)", href: "/withdrawals", icon: ArrowUpRight },
   { name: "Transaction History", href: "/transaction-history", icon: History },
+  { name: "KYC", href: "/kyc", icon: ShieldCheck },
   { name: "Rates & Markups", href: "/rates", icon: Percent, disabled: true },
   { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook, disabled: true },
   { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale, disabled: true },
