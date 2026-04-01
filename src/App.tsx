@@ -16,6 +16,7 @@ import OxsSwap from "@/pages/OxsSwap";
 import Deposits from "@/pages/Deposits";
 import Withdrawals from "@/pages/Withdrawals";
 import TransactionHistory from "@/pages/TransactionHistory";
+import Kyc from "@/pages/Kyc";
 import Rates from "@/pages/Rates";
 import Webhooks from "@/pages/Webhooks";
 import ReconciliationSettlement from "@/pages/ReconciliationSettlement";
@@ -46,6 +47,7 @@ function AppRoutes() {
         <Route path="/deposits" element={<ProtectedRoute element={<Deposits />} />} />
         <Route path="/withdrawals" element={<ProtectedRoute element={<Withdrawals />} />} />
         <Route path="/transaction-history" element={<ProtectedRoute element={<TransactionHistory />} />} />
+        <Route path="/kyc" element={<ProtectedRoute element={<Kyc />} />} />
         <Route path="/rates" element={<ProtectedRoute element={<Rates />} />} />
         <Route path="/webhooks" element={<ProtectedRoute element={<Webhooks />} />} />
         <Route path="/reconciliation" element={<ProtectedRoute element={<ReconciliationSettlement />} />} />

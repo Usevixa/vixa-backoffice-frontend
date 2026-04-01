@@ -47,13 +47,13 @@ export async function updateUserNotes(
 }
 
 export async function freezeUserWallets(userId: string): Promise<unknown> {
-  const response = await api.post(`/api/v1/admin/users/${userId}/freeze-wallets`);
+  const response = await api.post(`/api/v1/admin/users/${userId}/freeze-wallets`, { reason: "Freeze wallet" });
   return response?.data;
 }
 
 
 export async function unfreezeUserWallet(userId: string): Promise<unknown> {
-  const response = await api.post(`/api/v1/admin/users/${userId}/unfreeze-wallet`);
+  const response = await api.post(`/api/v1/admin/users/${userId}/unfreeze-wallet`, { reason: "Unfreeze wallet" });
   return response?.data;
 }
 
