@@ -24,7 +24,7 @@ import { DepositDetailsSheet } from "@/components/deposits/DepositDetailsSheet";
 
 function statusVariant(status: string): "success" | "warning" | "error" {
   const s = status.toLowerCase();
-  if (["credited", "completed", "confirmed", "complete"].includes(s)) return "success";
+  if (["completed", "confirmed", "complete"].includes(s)) return "success";
   if (["processing", "pending", "detected"].includes(s)) return "warning";
   return "error";
 }
@@ -205,7 +205,7 @@ export default function Deposits() {
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="processing">Processing</SelectItem>
               <SelectItem value="confirmed">Confirmed</SelectItem>
-              <SelectItem value="credited">Credited</SelectItem>
+              <SelectItem value="complete">Complete</SelectItem>
               <SelectItem value="failed">Failed</SelectItem>
             </SelectContent>
           </Select>

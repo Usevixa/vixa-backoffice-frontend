@@ -24,7 +24,7 @@ const navigation = [
   { name: "Users", href: "/users", icon: Users },
   { name: "Wallets (OpenXSwitch)", href: "/wallets", icon: Building2 },
   { name: "Send (OpenXSwitch)", href: "/oxs-send", icon: ArrowUpRight },
-  { name: "Receive (OpenXSwitch)", href: "/oxs-receive", icon: ArrowDownLeft, disabled: true },
+  { name: "Receive (OpenXSwitch)", href: "/oxs-receive", icon: ArrowDownLeft },
   { name: "Swap (OpenXSwitch)", href: "/oxs-swap", icon: RefreshCw },
   { name: "Deposits (Network In)", href: "/deposits", icon: ArrowDownLeft },
   { name: "Withdrawals (Network Out)", href: "/withdrawals", icon: ArrowUpRight },
