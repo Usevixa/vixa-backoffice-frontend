@@ -53,7 +53,7 @@ const PAGE_SIZE_OPTIONS = [15, 25, 50];
 function statusVariant(status: string): "success" | "warning" | "error" {
   const s = status.toLowerCase();
   if (["completed", "confirmed", "credited", "complete"].includes(s)) return "success";
-  if (["pending", "processing"].includes(s)) return "warning";
+  if (["pending", "processing", "leg1_pending", "leg2_pending"].includes(s)) return "warning";
   return "error";
 }
 
@@ -227,6 +227,8 @@ export default function TransactionHistory() {
               <SelectItem value="CREDITED">Credited</SelectItem>
               <SelectItem value="PROCESSING">Processing</SelectItem>
               <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="LEG1_PENDING">Leg 1 Pending</SelectItem>
+              <SelectItem value="LEG2_PENDING">Leg 2 Pending</SelectItem>
               <SelectItem value="FAILED">Failed</SelectItem>
             </SelectContent>
           </Select>
@@ -240,6 +242,7 @@ export default function TransactionHistory() {
               <SelectItem value="USDC">USDC</SelectItem>
               <SelectItem value="SOL">SOL</SelectItem>
               <SelectItem value="ETH">ETH</SelectItem>
+              <SelectItem value="BTC">BTC</SelectItem>
             </SelectContent>
           </Select>
         </div>

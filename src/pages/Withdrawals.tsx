@@ -27,7 +27,7 @@ import { Withdrawal } from "@/types/withdrawal";
 
 function statusVariant(status: string): "success" | "warning" | "error" {
   const s = status.toLowerCase();
-  if (["completed", "confirmed", "complete"].includes(s)) return "success";
+  if (["completed", "confirmed", "complete", "swap_completed"].includes(s)) return "success";
   if (["processing", "pending", "initiated"].includes(s)) return "warning";
   return "error";
 }
@@ -227,6 +227,7 @@ export default function Withdrawals() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="SWAP_COMPLETED">Swapped</SelectItem>
                   <SelectItem value="failed">Failed</SelectItem>
                 </SelectContent>
               </Select>
