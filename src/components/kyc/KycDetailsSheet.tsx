@@ -1,18 +1,13 @@
 import { useState } from "react";
-import { CheckCircle, XCircle } from "lucide-react";
-import { toast } from "sonner";
+import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { KycDetail } from "@/types/kyc";
-
-// TODO: When endpoints are available, replace prop-based record with:
-// import { useApproveKyc, useDeclineKyc } from "@/hooks/useKycQueries";
-// and fetch via useKycDetail(id, open) instead of passing record directly.
+import { useKycDetail, useReviewKyc } from "@/hooks/useKycQueries";
 
 interface KycDetailsSheetProps {
-  record: KycDetail | null;
+  userId: string | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -43,31 +38,26 @@ function RefRow({ label, value }: { label: string; value?: string | null }) {
   );
 }
 
-export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetProps) {
+export function KycDetailsSheet({ userId, open, onOpenChange }: KycDetailsSheetProps) {
   const [comment, setComment] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const isPendingApproval = record?.status === "pending_approval";
-  const canSubmit = comment.trim().length > 0 && !isSubmitting;
+  const { data: record, isLoading } = useKycDetail(userId, open && !!userId);
 
-  // TODO: Replace stub handlers with real mutations when endpoints are available:
-  // const approveMutation = useApproveKyc();
-  // const declineMutation = useDeclineKyc();
-  // Then call: approveMutation.mutate({ id: record.id, payload: { comment } }, { onSuccess: () => { ... } })
+  const reviewMutation = useReviewKyc(() => {
+    setComment("");
+    onOpenChange(false);
+  });
 
-  function handleDecision(action: "approve" | "decline") {
+  const isPendingApproval =
+    record?.kycStatus?.toLowerCase() === "pending_approval";
+  const canSubmit = comment.trim().length > 0 && !reviewMutation.isPending;
+
+  function handleDecision(action: "Approve" | "Reject") {
     if (!record || !canSubmit) return;
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setComment("");
-      onOpenChange(false);
-      toast.success(
-        action === "approve"
-          ? `KYC approved for ${record.userFullName}`
-          : `KYC declined for ${record.userFullName}`
-      );
-    }, 600);
+    reviewMutation.mutate({
+      userId: record.userId,
+      payload: { action, comment },
+    });
   }
 
   function handleOpenChange(val: boolean) {
@@ -83,7 +73,11 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
         </SheetHeader>
 
         <div className="mt-6">
-          {!record ? (
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
+          ) : !record ? (
             <p className="text-sm text-muted-foreground">No record selected.</p>
           ) : (
             <div className="space-y-6">
@@ -92,13 +86,13 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
               <div className="rounded-lg border border-border p-4 space-y-2">
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-lg font-semibold">{record.userFullName}</p>
+                    <p className="text-lg font-semibold">{record.fullName}</p>
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">
                       {record.userId}
                     </p>
                   </div>
-                  <StatusBadge status={statusVariant(record.status)}>
-                    {record.statusDisplay}
+                  <StatusBadge status={statusVariant(record.kycStatus)}>
+                    {record.kycStatus}
                   </StatusBadge>
                 </div>
                 {record.submittedAt && (
@@ -121,7 +115,7 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                   User Information
                 </h4>
                 <div className="grid grid-cols-2 gap-4">
-                  <DetailRow label="Full Name" value={record.userFullName} />
+                  <DetailRow label="Full Name" value={record.fullName} />
                   <DetailRow label="User ID" value={<span className="font-mono text-xs">{record.userId}</span>} />
                   <DetailRow label="Email" value={record.email} />
                   <DetailRow label="Phone" value={record.phone} />
@@ -134,7 +128,7 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                             day: "numeric",
                             year: "numeric",
                           })
-                        : "—"
+                        : undefined
                     }
                   />
                   <DetailRow label="Nationality" value={record.nationality} />
@@ -161,6 +155,19 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                 </div>
               </div>
 
+              {/* Provider info */}
+              {record.provider && (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Verification Provider
+                  </h4>
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <RefRow label="Provider" value={record.provider} />
+                    <RefRow label="Provider Ref" value={record.providerRef} />
+                  </div>
+                </div>
+              )}
+
               {/* Approve / Decline — only visible when pending_approval */}
               {isPendingApproval && (
                 <div className="rounded-lg border border-warning/40 bg-warning/5 p-4 space-y-3">
@@ -168,7 +175,7 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                     Review Decision
                   </h4>
                   <p className="text-xs text-muted-foreground">
-                    A comment is required before approving or declining this KYC submission.
+                    A comment is required before approving or rejecting this KYC submission.
                   </p>
                   <textarea
                     className={cn(
@@ -185,7 +192,7 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                     <Button
                       className="flex-1 bg-success hover:bg-success/90 text-success-foreground"
                       disabled={!canSubmit}
-                      onClick={() => handleDecision("approve")}
+                      onClick={() => handleDecision("Approve")}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
                       Approve
@@ -194,10 +201,10 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                       variant="destructive"
                       className="flex-1"
                       disabled={!canSubmit}
-                      onClick={() => handleDecision("decline")}
+                      onClick={() => handleDecision("Reject")}
                     >
                       <XCircle className="mr-2 h-4 w-4" />
-                      Decline
+                      Reject
                     </Button>
                   </div>
                 </div>
@@ -210,7 +217,7 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                     Review Information
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <DetailRow label="Reviewed By" value={record.reviewerName} />
+                    <DetailRow label="Reviewed By" value={record.reviewedByName} />
                     <DetailRow
                       label="Reviewed At"
                       value={new Date(record.reviewedAt).toLocaleString("en-US", {
@@ -238,6 +245,7 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                 </h4>
                 <div className="rounded-lg border border-border p-3 space-y-2">
                   <RefRow label="User ID" value={record.userId} />
+                  <RefRow label="Internal ID" value={record.internalId} />
                   <RefRow label="Document Number" value={record.documentNumber} />
                 </div>
               </div>
@@ -249,16 +257,16 @@ export function KycDetailsSheet({ record, open, onOpenChange }: KycDetailsSheetP
                     Review History
                   </h4>
                   <div className="space-y-2">
-                    {record.reviewHistory.map((entry) => (
+                    {record.reviewHistory.map((entry, i) => (
                       <div
-                        key={entry.id}
+                        key={entry.id ?? i}
                         className="rounded-lg border border-border p-3 space-y-1"
                       >
                         <div className="flex items-center justify-between">
                           <StatusBadge
-                            status={entry.action === "approved" ? "success" : "error"}
+                            status={entry.action.toLowerCase() === "approve" ? "success" : "error"}
                           >
-                            {entry.actionDisplay}
+                            {entry.actionDisplay ?? entry.action}
                           </StatusBadge>
                           <span className="text-xs text-muted-foreground font-mono">
                             {new Date(entry.timestamp).toLocaleString("en-US", {

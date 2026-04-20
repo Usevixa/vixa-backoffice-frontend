@@ -13,6 +13,7 @@ export interface User {
   joinedAt: string;
   isFlagged: boolean;
   canWithdraw: boolean;
+  canTrade?: boolean;
 }
 
 // Note shape from GET /api/v1/admin/users/{userId}/notes → data.notes[]
@@ -49,4 +50,9 @@ export interface ToggleWithdrawalPayload {
 export interface FlagUserPayload {
   isFlagged: boolean;
   reason: string;
+}
+
+// Payload for PATCH /api/v1/admin/users/{userId}/can-trade
+export interface ToggleTradePayload {
+  enabled: boolean;
 }

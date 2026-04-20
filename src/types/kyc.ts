@@ -1,44 +1,48 @@
+// Shape of items from GET /api/v1/admin/kyc → data.items[]
 export interface KycRecord {
-  id: number;
   userId: string;
-  userFullName: string;
+  internalId: string;
+  fullName: string;
   email: string;
   phone: string;
   dateOfBirth: string;
-  status: string;
-  statusDisplay: string;
+  kycStatus: string;
   submittedAt: string | null;
-  updatedAt: string | null;
-  reviewerName: string | null;
+  lastUpdated: string | null;
 }
 
-export interface KycReviewEntry {
-  id: number;
-  action: string;
-  actionDisplay: string;
-  comment: string;
-  reviewerName: string;
-  timestamp: string;
-}
-
+// Shape from GET /api/v1/admin/kyc/{userId} → data
 export interface KycDetail extends KycRecord {
+  nationality: string | null;
   documentType: string | null;
   documentNumber: string | null;
   issuingCountry: string | null;
-  nationality: string | null;
   address: string | null;
+  provider: string | null;
+  providerRef: string | null;
+  reviewedBy: string | null;
+  reviewedByName: string | null;
   reviewedAt: string | null;
   reviewComment: string | null;
   reviewHistory: KycReviewEntry[];
 }
 
+export interface KycReviewEntry {
+  id?: number;
+  action: string;
+  actionDisplay?: string;
+  comment: string;
+  reviewerName: string;
+  timestamp: string;
+}
+
+// Shape from GET /api/v1/admin/kyc/stats → data
 export interface KycStats {
-  totalCount: number;
-  verifiedCount: number;
-  pendingCount: number;
-  pendingApprovalCount: number;
-  failedCount: number;
-  rejectedCount: number;
+  total: number;
+  verified: number;
+  pending: number;
+  pendingApproval: number;
+  failedOrRejected: number;
 }
 
 export interface KycFilter {
@@ -53,11 +57,13 @@ export interface KycFilter {
 export interface KycListResult {
   items: KycRecord[];
   totalCount: number;
-  pageNo: number;
+  page: number;
   pageSize: number;
   totalPages: number;
 }
 
-export interface KycDecisionPayload {
+// Payload for POST /api/v1/admin/kyc/{userId}/review
+export interface KycReviewPayload {
+  action: "Approve" | "Reject";
   comment: string;
 }

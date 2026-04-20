@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { KycDecisionPayload } from "@/types/kyc";
+import { KycReviewPayload } from "@/types/kyc";
 
 /**
  * GET /api/v1/admin/kyc
@@ -13,10 +13,10 @@ export async function getKycRecords(
 }
 
 /**
- * GET /api/v1/admin/kyc/{id}
+ * GET /api/v1/admin/kyc/{userId}
  */
-export async function getKycById(id: number): Promise<unknown> {
-  const response = await api.get(`/api/v1/admin/kyc/${id}`);
+export async function getKycDetail(userId: string): Promise<unknown> {
+  const response = await api.get(`/api/v1/admin/kyc/${userId}`);
   return response?.data;
 }
 
@@ -29,23 +29,12 @@ export async function getKycStats(): Promise<unknown> {
 }
 
 /**
- * PATCH /api/v1/admin/kyc/{id}/approve
+ * POST /api/v1/admin/kyc/{userId}/review
  */
-export async function approveKyc(
-  id: number,
-  payload: KycDecisionPayload
+export async function reviewKyc(
+  userId: string,
+  payload: KycReviewPayload
 ): Promise<unknown> {
-  const response = await api.patch(`/api/v1/admin/kyc/${id}/approve`, payload);
-  return response?.data;
-}
-
-/**
- * PATCH /api/v1/admin/kyc/{id}/decline
- */
-export async function declineKyc(
-  id: number,
-  payload: KycDecisionPayload
-): Promise<unknown> {
-  const response = await api.patch(`/api/v1/admin/kyc/${id}/decline`, payload);
+  const response = await api.post(`/api/v1/admin/kyc/${userId}/review`, payload);
   return response?.data;
 }

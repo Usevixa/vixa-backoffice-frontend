@@ -26,6 +26,7 @@ import {
   useFreezeWallets,
   useUnfreezeWallet,
   useToggleWithdrawal,
+  useToggleTrade,
   useFlagUser,
 } from "@/hooks/useUserQueries";
 
@@ -80,6 +81,7 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
   const freezeWalletsMutation = useFreezeWallets();
   const unfreezeWalletMutation = useUnfreezeWallet();
   const toggleWithdrawalMutation = useToggleWithdrawal();
+  const toggleTradeMutation = useToggleTrade();
   const flagUserMutation = useFlagUser();
   const updateNotesMutation = useUpdateUserNotes(() => setAdminNotes(""));
 
@@ -90,6 +92,7 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
   const wallet = walletData as any;
 
   const withdrawalsEnabled = user.canWithdraw;
+  const tradingEnabled = user.canTrade ?? false;
   const tokenBalances: any[] = wallet?.wallets ?? wallet?.balances ?? wallet?.tokenBalances ?? wallet?.tokens ?? [];
   const totalUsdtEquiv = wallet?.totalBalanceUsdt ?? wallet?.totalUsdtEquiv ?? wallet?.usdtEquiv ?? user.usdtBalance ?? 0;
 
@@ -213,6 +216,22 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
                       toggleWithdrawalMutation.mutate({
                         userId: user.userId,
                         payload: { enabled: checked, reason: "admin" },
+                      });
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Trading Enabled</Label>
+                    <p className="text-xs text-muted-foreground">Allow user to activate wallet and trade</p>
+                  </div>
+                  <Switch
+                    checked={tradingEnabled}
+                    disabled={profileLoading || toggleTradeMutation.isPending}
+                    onCheckedChange={(checked) => {
+                      toggleTradeMutation.mutate({
+                        userId: user.userId,
+                        payload: { enabled: checked },
                       });
                     }}
                   />
