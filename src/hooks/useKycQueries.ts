@@ -1,18 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
   getKycRecords,
-  getKycById,
+  getKycDetail,
   getKycStats,
-  approveKyc,
-  declineKyc,
+  reviewKyc,
 } from "@/services/kyc.service";
 import {
-  KycDecisionPayload,
   KycDetail,
   KycListResult,
   KycStats,
   KycFilter,
+  KycReviewPayload,
 } from "@/types/kyc";
+
+function getErrorMessage(err: unknown): string {
+  const backendMessage = (err as any)?.response?.data?.message;
+  if (typeof backendMessage === "string" && backendMessage.trim()) {
+    return backendMessage;
+  }
+  if (err instanceof Error && err.message) {
+    return err.message;
+  }
+  return "Something went wrong. Please try again.";
+}
 
 export function useKycRecords(filters: KycFilter) {
   const params: Record<string, string | number> = {};
@@ -29,7 +40,7 @@ export function useKycRecords(filters: KycFilter) {
     select: (data: unknown): KycListResult => ({
       items: (data as any)?.data?.items ?? [],
       totalCount: (data as any)?.data?.totalCount ?? 0,
-      pageNo: (data as any)?.data?.pageNo ?? 1,
+      page: (data as any)?.data?.page ?? 1,
       pageSize: (data as any)?.data?.pageSize ?? 15,
       totalPages: Math.max(1, (data as any)?.data?.totalPages ?? 1),
     }),
@@ -44,35 +55,30 @@ export function useKycStats() {
   });
 }
 
-export function useKycDetail(id: number | null, enabled: boolean) {
+export function useKycDetail(userId: string | null, enabled: boolean) {
   return useQuery({
-    queryKey: ["kyc", id] as const,
-    queryFn: () => getKycById(id!),
-    enabled: enabled && !!id,
+    queryKey: ["kyc", userId] as const,
+    queryFn: () => getKycDetail(userId!),
+    enabled: enabled && !!userId,
     select: (data: unknown) => (data as any)?.data as KycDetail,
   });
 }
 
-export function useApproveKyc() {
+export function useReviewKyc(onSuccess?: () => void) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: KycDecisionPayload }) =>
-      approveKyc(id, payload),
-    onSuccess: () => {
+    mutationFn: ({ userId, payload }: { userId: string; payload: KycReviewPayload }) =>
+      reviewKyc(userId, payload),
+    onSuccess: (data, { userId, payload }) => {
       queryClient.invalidateQueries({ queryKey: ["kyc-records"] });
       queryClient.invalidateQueries({ queryKey: ["kyc-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["kyc", userId] });
+      toast.success(
+        (data as any)?.message ??
+          (payload.action === "Approve" ? "KYC approved successfully" : "KYC rejected successfully")
+      );
+      onSuccess?.();
     },
-  });
-}
-
-export function useDeclineKyc() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: KycDecisionPayload }) =>
-      declineKyc(id, payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["kyc-records"] });
-      queryClient.invalidateQueries({ queryKey: ["kyc-stats"] });
-    },
+    onError: (err) => toast.error(getErrorMessage(err)),
   });
 }

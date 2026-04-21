@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { UpdateNotesPayload, ToggleWithdrawalPayload, FlagUserPayload } from "@/types/user";
+import { UpdateNotesPayload, ToggleWithdrawalPayload, FlagUserPayload, ToggleTradePayload } from "@/types/user";
 
 
 
@@ -68,5 +68,10 @@ export async function toggleUserWithdrawal(
 
 export async function flagUser(userId: string, payload: FlagUserPayload): Promise<unknown> {
   const response = await api.patch(`/api/v1/admin/users/${userId}/flag`, payload);
+  return response?.data;
+}
+
+export async function toggleUserTrade(userId: string, payload: ToggleTradePayload): Promise<unknown> {
+  const response = await api.patch(`/api/v1/admin/users/${userId}/can-trade`, payload);
   return response?.data;
 }

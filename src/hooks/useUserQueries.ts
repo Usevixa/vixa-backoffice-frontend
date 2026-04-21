@@ -12,6 +12,7 @@ import {
   unfreezeUserWallet,
   toggleUserWithdrawal,
   flagUser,
+  toggleUserTrade,
 } from "@/services/user.service";
 import {
   User,
@@ -20,6 +21,7 @@ import {
   UpdateNotesPayload,
   ToggleWithdrawalPayload,
   FlagUserPayload,
+  ToggleTradePayload,
 } from "@/types/user";
 
 function getErrorMessage(err: unknown): string {
@@ -171,6 +173,23 @@ export function useFlagUser(onSuccess?: () => void) {
     onSuccess: (_data, { payload }) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success(payload.isFlagged ? "User flagged successfully" : "Flag removed successfully");
+      onSuccess?.();
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useToggleTrade(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, payload }: { userId: string; payload: ToggleTradePayload }) =>
+      toggleUserTrade(userId, payload),
+    onSuccess: (data, { userId, payload }) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user", userId, "profile"] });
+      toast.success(
+        (data as any)?.message ?? (payload.enabled ? "Trading enabled" : "Trading disabled")
+      );
       onSuccess?.();
     },
     onError: (err) => toast.error(getErrorMessage(err)),
