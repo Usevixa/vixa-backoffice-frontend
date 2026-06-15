@@ -22,13 +22,27 @@ import Webhooks from "@/pages/Webhooks";
 import ReconciliationSettlement from "@/pages/ReconciliationSettlement";
 import Settings from "@/pages/Settings";
 import AdminRoles from "@/pages/AdminRoles";
+import Onboarding from "@/pages/Onboarding";
+import ForceChangePassword from "@/pages/ForceChangePassword";
+import AcceptInvite from "@/pages/AcceptInvite";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ element }: { element: React.ReactElement }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return isAuthenticated ? element : <Navigate to="/login" replace />;
+  const user = useAuthStore((s) => s.user);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (user?.mustChangePassword) return <Navigate to="/force-change-password" replace />;
+  return element;
+}
+
+function ForcePasswordRoute() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const user = useAuthStore((s) => s.user);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!user?.mustChangePassword) return <Navigate to="/" replace />;
+  return <ForceChangePassword />;
 }
 
 function AppRoutes() {
@@ -53,7 +67,10 @@ function AppRoutes() {
         <Route path="/reconciliation" element={<ProtectedRoute element={<ReconciliationSettlement />} />} />
         <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
         <Route path="/admin-roles" element={<ProtectedRoute element={<AdminRoles />} />} />
+        <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding />} />} />
       </Route>
+      <Route path="/force-change-password" element={<ForcePasswordRoute />} />
+      <Route path="/admin/accept-invite" element={<AcceptInvite />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

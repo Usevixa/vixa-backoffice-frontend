@@ -13,6 +13,8 @@ import {
   toggleUserWithdrawal,
   flagUser,
   toggleUserTrade,
+  lockUserWallet,
+  unlockUserWallet,
 } from "@/services/user.service";
 import {
   User,
@@ -22,6 +24,8 @@ import {
   ToggleWithdrawalPayload,
   FlagUserPayload,
   ToggleTradePayload,
+  LockWalletPayload,
+  UnlockWalletPayload,
 } from "@/types/user";
 
 function getErrorMessage(err: unknown): string {
@@ -190,6 +194,36 @@ export function useToggleTrade(onSuccess?: () => void) {
       toast.success(
         (data as any)?.message ?? (payload.enabled ? "Trading enabled" : "Trading disabled")
       );
+      onSuccess?.();
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useLockWallet(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, payload }: { userId: string; payload: LockWalletPayload }) =>
+      lockUserWallet(userId, payload),
+    onSuccess: (_data, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user", userId, "profile"] });
+      toast.success("Wallet locked successfully");
+      onSuccess?.();
+    },
+    onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useUnlockWallet(onSuccess?: () => void) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, payload }: { userId: string; payload: UnlockWalletPayload }) =>
+      unlockUserWallet(userId, payload),
+    onSuccess: (_data, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user", userId, "profile"] });
+      toast.success("Wallet unlocked successfully");
       onSuccess?.();
     },
     onError: (err) => toast.error(getErrorMessage(err)),

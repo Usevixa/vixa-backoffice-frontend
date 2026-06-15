@@ -1,5 +1,15 @@
-import { useState } from "react";
-import { Search, Filter, RefreshCw, Eye, CheckCircle, XCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Webhook,
+  CheckCircle,
+  XCircle,
+  Eye,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,125 +20,74 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { useWebhookLogs } from "@/hooks/useWebhookQueries";
+import { WebhookDetailsSheet } from "@/components/webhooks/WebhookDetailsSheet";
 
-const webhooks = [
-  {
-    id: "WH-001",
-    source: "OpenXSwitch",
-    endpoint: "/webhooks/openxswitch/transfer",
-    event: "transfer.completed",
-    eventType: "send",
-    status: "success",
-    retries: 0,
-    linkedTransfer: "TRF-20241231-001",
-    timestamp: "Dec 31, 2024 14:32:15",
-    responseTime: "124ms",
-    payload: '{"event":"transfer.completed","data":{"id":"TRF-20241231-001","amount":250000,"status":"success"}}',
-    signatureValid: true,
-  },
-  {
-    id: "WH-002",
-    source: "Yellow Card",
-    endpoint: "/webhooks/yellowcard/payout",
-    event: "payout.completed",
-    eventType: "send",
-    status: "success",
-    retries: 0,
-    linkedTransfer: "STO-002",
-    timestamp: "Dec 31, 2024 14:30:45",
-    responseTime: "89ms",
-    payload: '{"event":"payout.completed","data":{"id":"YC-5523891","amount":"175.00","currency":"USDT"}}',
-    signatureValid: true,
-  },
-  {
-    id: "WH-003",
-    source: "OpenXSwitch",
-    endpoint: "/webhooks/openxswitch/transfer",
-    event: "transfer.failed",
-    eventType: "send",
-    status: "failed",
-    retries: 3,
-    linkedTransfer: "TRF-20241231-005",
-    timestamp: "Dec 31, 2024 14:28:22",
-    responseTime: "timeout",
-    error: "Connection timeout after 30s",
-    payload: '{"event":"transfer.failed","data":{"id":"TRF-20241231-005","error":"bank_timeout"}}',
-    signatureValid: true,
-  },
-  {
-    id: "WH-004",
-    source: "OpenXSwitch",
-    endpoint: "/webhooks/openxswitch/deposit",
-    event: "deposit.confirmed",
-    eventType: "receive",
-    status: "success",
-    retries: 0,
-    linkedTransfer: "TRF-20241231-002",
-    timestamp: "Dec 31, 2024 14:25:11",
-    responseTime: "156ms",
-    payload: '{"event":"deposit.confirmed","data":{"amount":180000,"date":"2024-12-31"}}',
-    signatureValid: true,
-  },
-  {
-    id: "WH-005",
-    source: "Yellow Card",
-    endpoint: "/webhooks/yellowcard/swap",
-    event: "swap.completed",
-    eventType: "swap",
-    status: "success",
-    retries: 0,
-    linkedTransfer: "SWP-001",
-    timestamp: "Dec 31, 2024 14:22:33",
-    responseTime: "234ms",
-    payload: '{"event":"swap.completed","data":{"id":"SWP-001","from":"NGN","to":"USDT"}}',
-    signatureValid: true,
-  },
-  {
-    id: "WH-006",
-    source: "Yellow Card",
-    endpoint: "/webhooks/yellowcard/swap",
-    event: "swap.failed",
-    eventType: "swap",
-    status: "failed",
-    retries: 3,
-    linkedTransfer: "SWP-004",
-    timestamp: "Dec 31, 2024 14:18:45",
-    responseTime: "timeout",
-    error: "Invalid signature",
-    payload: '{"event":"swap.failed","data":{"id":"SWP-004"}}',
-    signatureValid: false,
-  },
-  {
-    id: "WH-007",
-    source: "OpenXSwitch",
-    endpoint: "/webhooks/openxswitch/system",
-    event: "health.check",
-    eventType: "system",
-    status: "success",
-    retries: 0,
-    timestamp: "Dec 31, 2024 14:15:00",
-    responseTime: "45ms",
-    payload: '{"event":"health.check","data":{"status":"healthy"}}',
-    signatureValid: true,
-  },
+function statusVariant(status: string): "success" | "warning" | "error" {
+  const s = status.toLowerCase();
+  if (["success", "completed", "complete"].includes(s)) return "success";
+  if (["processing", "pending"].includes(s)) return "warning";
+  return "error";
+}
+
+const FALLBACK_PROVIDERS = [
+  { name: "OpenXSwitch", status: "" },
+  { name: "Yellow Card", status: "" },
 ];
 
-const eventTypeColors = {
-  send: "bg-primary/10 text-primary",
-  receive: "bg-success/10 text-success",
-  swap: "bg-warning/10 text-warning",
-  system: "bg-muted text-muted-foreground",
-};
-
 export default function Webhooks() {
-  const [selectedWebhook, setSelectedWebhook] = useState<typeof webhooks[0] | null>(null);
+  const [selectedWebhookId, setSelectedWebhookId] = useState<number | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
 
-  const successCount = webhooks.filter(w => w.status === "success").length;
-  const failedCount = webhooks.filter(w => w.status === "failed").length;
-  const successRate = ((successCount / webhooks.length) * 100).toFixed(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [source, setSource] = useState("all");
+  const [category, setCategory] = useState("all");
+  const [status, setStatus] = useState("all");
+
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput), 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, source, category, status]);
+
+  const { data, isLoading, isError } = useWebhookLogs({
+    search,
+    source,
+    category,
+    status,
+    page: currentPage,
+    pageSize,
+  });
+
+  const webhooks = data?.items ?? [];
+  const stats = data?.stats;
+  const providers = data?.providers?.length ? data.providers : FALLBACK_PROVIDERS;
+  const totalPages = data?.totalPages ?? 1;
+  const totalCount = data?.totalCount ?? 0;
+
+  const hasActiveFilters =
+    !!searchInput || source !== "all" || category !== "all" || status !== "all";
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setSource("all");
+    setCategory("all");
+    setStatus("all");
+    setCurrentPage(1);
+  };
+
+  const openDetail = (id: number) => {
+    setSelectedWebhookId(id);
+    setSheetOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -143,41 +102,53 @@ export default function Webhooks() {
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
         <div className="metric-card">
-          <p className="metric-label">Total Webhooks (24h)</p>
-          <p className="metric-value mt-1">1,247</p>
+          <div className="flex items-center gap-2">
+            <Webhook className="h-4 w-4 text-muted-foreground" />
+            <p className="metric-label">Total (24h)</p>
+          </div>
+          <p className="metric-value mt-1">{stats?.totalWebhooks24h ?? "—"}</p>
         </div>
         <div className="metric-card">
           <p className="metric-label">Success Rate</p>
-          <p className="metric-value mt-1 text-success">{successRate}%</p>
+          <p className="metric-value mt-1 text-success">
+            {stats != null ? `${Number(stats.successRate).toFixed(1)}%` : "—"}
+          </p>
         </div>
         <div className="metric-card border-destructive/30">
           <p className="metric-label">Failed (24h)</p>
-          <p className="metric-value mt-1 text-destructive">{failedCount}</p>
+          <p className="metric-value mt-1 text-destructive">{stats?.failed24h ?? "—"}</p>
         </div>
         <div className="metric-card">
           <p className="metric-label">Avg Response Time</p>
-          <p className="metric-value mt-1">142ms</p>
+          <p className="metric-value mt-1">
+            {stats?.avgResponseTimeMs != null ? `${stats.avgResponseTimeMs}ms` : "—"}
+          </p>
         </div>
       </div>
 
       {/* Provider Status */}
       <div className="grid gap-4 md:grid-cols-2">
-        {[
-          { name: "OpenXSwitch", status: "healthy", latency: "98ms" },
-          { name: "Yellow Card", status: "healthy", latency: "156ms" },
-        ].map((provider) => (
+        {providers.map((provider) => (
           <div key={provider.name} className="content-card p-4">
             <div className="flex items-center justify-between">
               <span className="font-medium">{provider.name}</span>
-              <StatusBadge
-                status={provider.status === "healthy" ? "success" : "warning"}
-              >
-                {provider.status}
-              </StatusBadge>
+              {provider.status ? (
+                <StatusBadge
+                  status={
+                    provider.status.toLowerCase() === "healthy" ? "success" : "warning"
+                  }
+                >
+                  {provider.status}
+                </StatusBadge>
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Avg latency: {provider.latency}
-            </p>
+            {provider.avgLatencyMs != null && (
+              <p className="text-xs text-muted-foreground mt-2">
+                Avg latency: {provider.avgLatencyMs}ms
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -188,33 +159,34 @@ export default function Webhooks() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search webhooks..."
+            placeholder="Search event, transfer ID, correlation ID..."
             className="pl-9"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
         </div>
-        <Select defaultValue="all">
+        <Select value={source} onValueChange={setSource}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Source" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Sources</SelectItem>
-            <SelectItem value="openxswitch">OpenXSwitch</SelectItem>
-            <SelectItem value="yellowcard">Yellow Card</SelectItem>
+            <SelectItem value="OpenXSwitch">OpenXSwitch</SelectItem>
+            <SelectItem value="YellowCard">Yellow Card</SelectItem>
           </SelectContent>
         </Select>
-        <Select defaultValue="all">
+        <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="Event Type" />
+            <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            <SelectItem value="send">SEND</SelectItem>
-            <SelectItem value="receive">RECEIVE</SelectItem>
-            <SelectItem value="swap">SWAP</SelectItem>
-            <SelectItem value="system">SYSTEM</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="SEND">SEND</SelectItem>
+            <SelectItem value="RECEIVE">RECEIVE</SelectItem>
+            <SelectItem value="SWAP">SWAP</SelectItem>
           </SelectContent>
         </Select>
-        <Select defaultValue="all">
+        <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-32">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -224,116 +196,123 @@ export default function Webhooks() {
             <SelectItem value="failed">Failed</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" size="icon">
-          <Filter className="h-4 w-4" />
-        </Button>
+        {hasActiveFilters && (
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+            <X className="mr-1 h-3.5 w-3.5" />
+            Clear
+          </Button>
+        )}
       </div>
 
-      {/* Webhooks Table */}
+      {/* Table */}
       <div className="content-card">
         <table className="data-table">
           <thead>
             <tr>
               <th>ID</th>
               <th>Source</th>
-              <th>Event Type</th>
+              <th>Category</th>
               <th>Event</th>
               <th>Status</th>
               <th>Retries</th>
               <th>Linked Transfer</th>
               <th>Response Time</th>
               <th>Timestamp</th>
-              <th className="text-right">Actions</th>
+              <th className="text-right">View</th>
             </tr>
           </thead>
           <tbody>
-            {webhooks.map((webhook) => (
+            {isLoading && (
+              <tr>
+                <td colSpan={10} className="py-12">
+                  <div className="flex justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                </td>
+              </tr>
+            )}
+            {isError && (
+              <tr>
+                <td colSpan={10} className="py-12 text-center text-sm text-destructive">
+                  Failed to load webhook logs. Please try again.
+                </td>
+              </tr>
+            )}
+            {!isLoading && !isError && webhooks.length === 0 && (
+              <tr>
+                <td colSpan={10} className="py-12 text-center text-sm text-muted-foreground">
+                  No webhook logs found.
+                </td>
+              </tr>
+            )}
+            {webhooks.map((wh) => (
               <tr
-                key={webhook.id}
+                key={wh.id}
                 className={cn(
                   "cursor-pointer",
-                  webhook.status === "failed" && "bg-destructive/5"
+                  statusVariant(wh.status) === "error" && "bg-destructive/5"
                 )}
-                onClick={() => {
-                  setSelectedWebhook(webhook);
-                  setSheetOpen(true);
-                }}
+                onClick={() => openDetail(wh.id)}
               >
-                <td className="font-mono text-sm">{webhook.id}</td>
+                <td className="font-mono text-sm">{wh.id}</td>
                 <td>
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
-                    webhook.source === "OpenXSwitch" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"
-                  )}>
-                    {webhook.source}
+                  <span
+                    className={cn(
+                      "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
+                      wh.source === "OpenXSwitch"
+                        ? "bg-primary/10 text-primary"
+                        : "bg-warning/10 text-warning"
+                    )}
+                  >
+                    {wh.source}
                   </span>
                 </td>
                 <td>
-                  <span className={cn(
-                    "inline-flex items-center px-2 py-1 rounded text-xs font-medium",
-                    eventTypeColors[webhook.eventType as keyof typeof eventTypeColors]
-                  )}>
-                    {webhook.eventType.toUpperCase()}
+                  <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground">
+                    {wh.eventCategory}
                   </span>
                 </td>
-                <td className="font-mono text-sm text-muted-foreground">
-                  {webhook.event}
-                </td>
+                <td className="font-mono text-sm text-muted-foreground">{wh.event}</td>
                 <td>
                   <div className="flex items-center gap-2">
-                    {webhook.status === "success" ? (
+                    {statusVariant(wh.status) === "success" ? (
                       <CheckCircle className="h-4 w-4 text-success" />
                     ) : (
                       <XCircle className="h-4 w-4 text-destructive" />
                     )}
-                    <span
-                      className={cn(
-                        "text-sm font-medium",
-                        webhook.status === "success" ? "text-success" : "text-destructive"
-                      )}
-                    >
-                      {webhook.status}
-                    </span>
+                    <StatusBadge status={statusVariant(wh.status)}>{wh.status}</StatusBadge>
                   </div>
                 </td>
                 <td>
-                  {webhook.retries > 0 ? (
-                    <span className="text-warning font-medium">{webhook.retries}</span>
+                  {wh.retries > 0 ? (
+                    <span className="text-warning font-medium">{wh.retries}</span>
                   ) : (
                     <span className="text-muted-foreground">0</span>
                   )}
                 </td>
                 <td>
-                  {webhook.linkedTransfer ? (
-                    <span className="font-mono text-sm text-primary">{webhook.linkedTransfer}</span>
+                  {wh.linkedTransfer ? (
+                    <span className="font-mono text-xs text-primary">{wh.linkedTransfer}</span>
                   ) : (
                     <span className="text-muted-foreground">—</span>
                   )}
                 </td>
-                <td
-                  className={cn(
-                    "font-mono text-sm",
-                    webhook.responseTime === "timeout" && "text-destructive"
-                  )}
-                >
-                  {webhook.responseTime}
+                <td className="font-mono text-sm">
+                  {wh.responseTimeMs > 0 ? `${wh.responseTimeMs}ms` : "—"}
                 </td>
-                <td className="text-muted-foreground text-sm">{webhook.timestamp}</td>
+                <td className="text-muted-foreground text-sm">
+                  {new Date(wh.timestamp).toLocaleString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </td>
                 <td className="text-right" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => {
-                      setSelectedWebhook(webhook);
-                      setSheetOpen(true);
-                    }}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {webhook.status === "failed" && (
-                      <Button size="sm" variant="outline">
-                        <RefreshCw className="mr-1 h-3 w-3" />
-                        Retry
-                      </Button>
-                    )}
-                  </div>
+                  <Button size="sm" variant="ghost" onClick={() => openDetail(wh.id)}>
+                    <Eye className="h-4 w-4" />
+                  </Button>
                 </td>
               </tr>
             ))}
@@ -341,114 +320,55 @@ export default function Webhooks() {
         </table>
       </div>
 
-      {/* Webhook Detail Sheet */}
-      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-[600px] overflow-y-auto">
-          {selectedWebhook && (
-            <>
-              <SheetHeader>
-                <SheetTitle>Webhook Details - {selectedWebhook.id}</SheetTitle>
-              </SheetHeader>
-              <div className="mt-6 space-y-6">
-                {/* Status */}
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full",
-                    selectedWebhook.status === "success" ? "bg-success/10" : "bg-destructive/10"
-                  )}>
-                    {selectedWebhook.status === "success" ? (
-                      <CheckCircle className="h-5 w-5 text-success" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-destructive" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold">{selectedWebhook.event}</p>
-                    <StatusBadge
-                      status={selectedWebhook.status === "success" ? "success" : "error"}
-                    >
-                      {selectedWebhook.status}
-                    </StatusBadge>
-                  </div>
-                </div>
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">
+          {totalCount === 0
+            ? "0"
+            : `${(currentPage - 1) * pageSize + 1}–${Math.min(
+                currentPage * pageSize,
+                totalCount
+              )}`}{" "}
+          of {totalCount}
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Prev
+          </Button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <Button
+              key={p}
+              variant={currentPage === p ? "default" : "outline"}
+              size="sm"
+              onClick={() => setCurrentPage(p)}
+              className="w-8 px-0"
+            >
+              {p}
+            </Button>
+          ))}
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+          >
+            Next
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
 
-                {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Source</p>
-                    <p className="font-medium">{selectedWebhook.source}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Endpoint</p>
-                    <p className="font-medium font-mono text-sm">{selectedWebhook.endpoint}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Response Time</p>
-                    <p className="font-medium">{selectedWebhook.responseTime}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Retries</p>
-                    <p className="font-medium">{selectedWebhook.retries}</p>
-                  </div>
-                  {selectedWebhook.linkedTransfer && (
-                    <div>
-                      <p className="text-xs text-muted-foreground">Linked Transfer</p>
-                      <p className="font-medium font-mono">{selectedWebhook.linkedTransfer}</p>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-xs text-muted-foreground">Timestamp</p>
-                    <p className="font-medium">{selectedWebhook.timestamp}</p>
-                  </div>
-                </div>
-
-                {/* Signature Verification */}
-                <div className={cn(
-                  "rounded-lg border p-4",
-                  selectedWebhook.signatureValid ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5"
-                )}>
-                  <div className="flex items-center gap-2">
-                    {selectedWebhook.signatureValid ? (
-                      <CheckCircle className="h-4 w-4 text-success" />
-                    ) : (
-                      <XCircle className="h-4 w-4 text-destructive" />
-                    )}
-                    <p className="text-sm font-medium">
-                      Signature {selectedWebhook.signatureValid ? "Valid" : "Invalid"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Error */}
-                {selectedWebhook.error && (
-                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
-                    <p className="text-sm font-medium text-destructive">Error</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {selectedWebhook.error}
-                    </p>
-                  </div>
-                )}
-
-                {/* Payload */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Payload</p>
-                  <pre className="rounded-lg bg-muted p-4 text-xs font-mono overflow-x-auto">
-                    {JSON.stringify(JSON.parse(selectedWebhook.payload), null, 2)}
-                  </pre>
-                </div>
-
-                {/* Actions */}
-                {selectedWebhook.status === "failed" && (
-                  <Button className="w-full">
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Retry Webhook
-                  </Button>
-                )}
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
+      <WebhookDetailsSheet
+        webhookId={selectedWebhookId}
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+      />
     </div>
   );
 }

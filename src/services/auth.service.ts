@@ -21,6 +21,23 @@ export interface ResendOtpPayload {
   email: string;
 }
 
+export interface ChangePasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ValidateInviteResponse {
+  email: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface AcceptInvitePayload {
+  token: string;
+  password: string;
+  confirmPassword: string;
+}
+
 // ---------------------------------------------------------------------------
 // Service functions — pure async, no hooks, no side effects
 // ---------------------------------------------------------------------------
@@ -56,6 +73,21 @@ export async function verifyOtp(payload: VerifyOtpPayload): Promise<unknown> {
  */
 export async function resendOtp(payload: ResendOtpPayload): Promise<unknown> {
   const response = await api.post("/api/v1/admin/auth/resend-otp", payload);
+  return response?.data;
+}
+
+export async function changePassword(payload: ChangePasswordPayload): Promise<unknown> {
+  const response = await api.post("/api/v1/admin/auth/change-password", payload);
+  return response?.data;
+}
+
+export async function validateInviteToken(token: string): Promise<unknown> {
+  const response = await api.get("/api/v1/admin/auth/invite", { params: { token } });
+  return response?.data;
+}
+
+export async function acceptInvite(payload: AcceptInvitePayload): Promise<unknown> {
+  const response = await api.post("/api/v1/admin/auth/accept-invite", payload);
   return response?.data;
 }
 
