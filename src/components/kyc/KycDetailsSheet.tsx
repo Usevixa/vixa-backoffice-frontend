@@ -49,7 +49,7 @@ export function KycDetailsSheet({ userId, open, onOpenChange }: KycDetailsSheetP
   });
 
   const isPendingApproval =
-    record?.kycStatus?.toLowerCase() === "pending_approval";
+    record?.kycStatus?.toLowerCase() === "pendingreview";
   const canSubmit = comment.trim().length > 0 && !reviewMutation.isPending;
 
   function handleDecision(action: "Approve" | "Reject") {
@@ -208,7 +208,7 @@ export function KycDetailsSheet({ userId, open, onOpenChange }: KycDetailsSheetP
                     </Button>
                   </div>
                 </div>
-              )}
+              )} 
 
               {/* Review Information — shown if reviewed */}
               {record.reviewedAt && (
