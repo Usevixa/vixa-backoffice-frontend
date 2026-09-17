@@ -35,6 +35,6 @@ export async function reviewKyc(
   userId: string,
   payload: KycReviewPayload
 ): Promise<unknown> {
-  const response = await api.post(`/api/v1/admin/kyc/${userId}/review`, payload);
+  const response = await api.patch(`/api/v1/admin/kyc/${userId}/review`, payload);
   return response?.data;
 }
