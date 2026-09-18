@@ -1,5 +1,5 @@
 import api from "@/lib/api";
-import { UpdateNotesPayload, ToggleWithdrawalPayload, FlagUserPayload, ToggleTradePayload } from "@/types/user";
+import { UpdateNotesPayload, ToggleWithdrawalPayload, FlagUserPayload, ToggleTradePayload, LockWalletPayload, UnlockWalletPayload } from "@/types/user";
 
 
 
@@ -73,5 +73,15 @@ export async function flagUser(userId: string, payload: FlagUserPayload): Promis
 
 export async function toggleUserTrade(userId: string, payload: ToggleTradePayload): Promise<unknown> {
   const response = await api.patch(`/api/v1/admin/users/${userId}/can-trade`, payload);
+  return response?.data;
+}
+
+export async function lockUserWallet(userId: string, payload: LockWalletPayload): Promise<unknown> {
+  const response = await api.post(`/api/v1/admin/users/${userId}/lock-wallet`, payload);
+  return response?.data;
+}
+
+export async function unlockUserWallet(userId: string, payload: UnlockWalletPayload): Promise<unknown> {
+  const response = await api.post(`/api/v1/admin/users/${userId}/unlock-wallet`, payload);
   return response?.data;
 }

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
-  Search, Plus, MoreHorizontal, Shield, Eye, Edit, ChevronRight, ChevronLeft, X, Check,
+  Search, Plus, MoreHorizontal, Shield, Eye, Edit, ChevronRight, ChevronLeft, X, Check, Loader2, Mail,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,20 +13,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { useAdminUsers, useAuditLogs, useCreateAdmin, useResendAdminInvite } from "@/hooks/useAdminManagementQueries";
+import { AuditLog } from "@/types/admin-management";
 
-// ─── Data ────────────────────────────────────────────────────────────────────
-
-const admins = [
-  { id: "ADM-001", name: "John Adeyemi", email: "john@vixa.com", phone: "+234 803 000 0001", role: "super_admin", status: "active", lastLogin: "2 mins ago", require2fa: true },
-  { id: "ADM-002", name: "Sarah Okafor", email: "sarah@vixa.com", phone: "+234 805 000 0002", role: "ops_admin", status: "active", lastLogin: "15 mins ago", require2fa: true },
-  { id: "ADM-003", name: "Michael Eze", email: "michael@vixa.com", phone: "+234 807 000 0003", role: "compliance", status: "active", lastLogin: "1 hour ago", require2fa: false },
-  { id: "ADM-004", name: "Grace Nwosu", email: "grace@vixa.com", phone: "+234 809 000 0004", role: "analyst", status: "active", lastLogin: "3 hours ago", require2fa: false },
-  { id: "ADM-005", name: "David Musa", email: "david@vixa.com", phone: "+234 801 000 0005", role: "ops_admin", status: "disabled", lastLogin: "2 days ago", require2fa: true },
-];
+// ─── Static Role Data ─────────────────────────────────────────────────────────
 
 const roles = [
   { id: "super_admin", name: "Super Admin", description: "Full access to all features and settings", color: "bg-destructive/10 text-destructive" },
@@ -174,7 +165,6 @@ const PERMISSION_GROUPS = [
   },
 ];
 
-// Role templates: which perm IDs are enabled
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   super_admin: PERMISSION_GROUPS.flatMap(g => g.perms.map(p => p.id)),
   ops_admin: [
@@ -216,24 +206,16 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   custom: [],
 };
 
-const auditLogs = [
-  { id: "AUD-001", admin: "John Adeyemi", action: "user.freeze_wallet", entity: "User", entityId: "USR-003", details: "Froze all wallets for Ibrahim Musa", timestamp: "Dec 31, 2024 14:32:15", ip: "102.89.45.123" },
-  { id: "AUD-002", admin: "Sarah Okafor", action: "withdrawal.retry", entity: "Withdrawal", entityId: "WDR-004", details: "Retried failed withdrawal", timestamp: "Dec 31, 2024 14:28:00", ip: "102.89.45.124" },
-  { id: "AUD-003", admin: "John Adeyemi", action: "rates.update", entity: "Rates", entityId: "USDT-DEPOSIT", details: "Updated USDT deposit markup 2.0% → 2.5%", timestamp: "Dec 31, 2024 14:00:00", ip: "102.89.45.123" },
-  { id: "AUD-004", admin: "Michael Eze", action: "kyc.approve", entity: "KYC", entityId: "KYC-004", details: "Approved KYC for Kemi Afolabi", timestamp: "Dec 30, 2024 16:20:00", ip: "102.89.45.125" },
-  { id: "AUD-005", admin: "Sarah Okafor", action: "wallet.adjust", entity: "Wallet", entityId: "SUB-00089", details: "Manual credit — Refund for failed deposit", timestamp: "Dec 30, 2024 15:45:00", ip: "102.89.45.124" },
-];
-
 // ─── Add Admin Multi-step Modal ───────────────────────────────────────────────
 
 type NewAdmin = {
-  name: string; email: string; phone: string; tempPassword: string;
-  require2fa: boolean; role: string; customPerms: Set<string>;
+  firstName: string; lastName: string; username: string; email: string;
+  isSuperAdmin: boolean; role: string; customPerms: Set<string>;
 };
 
 const defaultNewAdmin = (): NewAdmin => ({
-  name: "", email: "", phone: "", tempPassword: "Vixa@" + Math.random().toString(36).slice(2, 8).toUpperCase(),
-  require2fa: true, role: "", customPerms: new Set(),
+  firstName: "", lastName: "", username: "", email: "",
+  isSuperAdmin: false, role: "", customPerms: new Set(),
 });
 
 function AddAdminModal({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -244,6 +226,8 @@ function AddAdminModal({ open, onClose }: { open: boolean; onClose: () => void }
   const effectivePerms: Set<string> = form.role === "custom"
     ? form.customPerms
     : new Set(ROLE_PERMISSIONS[form.role] ?? []);
+
+  const createAdminMutation = useCreateAdmin(handleClose);
 
   function toggleCustomPerm(id: string) {
     setForm(f => {
@@ -289,27 +273,27 @@ function AddAdminModal({ open, onClose }: { open: boolean; onClose: () => void }
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Full Name *</Label>
-                <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Jane Obi" />
+                <Label>First Name *</Label>
+                <Input value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))} placeholder="Jane" />
+              </div>
+              <div className="space-y-2">
+                <Label>Last Name *</Label>
+                <Input value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))} placeholder="Obi" />
+              </div>
+              <div className="space-y-2">
+                <Label>Username *</Label>
+                <Input value={form.username} onChange={e => setForm(f => ({ ...f, username: e.target.value }))} placeholder="jane.obi" />
               </div>
               <div className="space-y-2">
                 <Label>Email *</Label>
                 <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="jane@vixa.com" />
               </div>
-              <div className="space-y-2">
-                <Label>Phone (optional)</Label>
-                <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+234 800 000 0000" />
-              </div>
-              <div className="space-y-2">
-                <Label>Temporary Password</Label>
-                <Input value={form.tempPassword} onChange={e => setForm(f => ({ ...f, tempPassword: e.target.value }))} />
-              </div>
             </div>
             <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <Switch checked={form.require2fa} onCheckedChange={v => setForm(f => ({ ...f, require2fa: v }))} />
+              <Switch checked={form.isSuperAdmin} onCheckedChange={(v: boolean) => setForm(f => ({ ...f, isSuperAdmin: v }))} />
               <div>
-                <p className="text-sm font-medium">Require 2FA on login</p>
-                <p className="text-xs text-muted-foreground">Recommended for all admin accounts</p>
+                <p className="text-sm font-medium">Super Admin</p>
+                <p className="text-xs text-muted-foreground">Grant super admin privileges</p>
               </div>
             </div>
           </div>
@@ -384,20 +368,21 @@ function AddAdminModal({ open, onClose }: { open: boolean; onClose: () => void }
             <div className="rounded-lg border border-border p-4 space-y-3">
               <h4 className="text-sm font-semibold">Admin Summary</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><p className="text-xs text-muted-foreground">Name</p><p className="font-medium">{form.name || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">First Name</p><p className="font-medium">{form.firstName || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Last Name</p><p className="font-medium">{form.lastName || "—"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Username</p><p className="font-medium">{form.username || "—"}</p></div>
                 <div><p className="text-xs text-muted-foreground">Email</p><p className="font-medium">{form.email || "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">Phone</p><p className="font-medium">{form.phone || "—"}</p></div>
                 <div><p className="text-xs text-muted-foreground">Role</p>
                   <span className={cn("inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-1", selectedRole?.color)}>
                     {selectedRole?.name ?? "—"}
                   </span>
                 </div>
-                <div><p className="text-xs text-muted-foreground">Require 2FA</p><p className="font-medium">{form.require2fa ? "Yes" : "No"}</p></div>
+                <div><p className="text-xs text-muted-foreground">Super Admin</p><p className="font-medium">{form.isSuperAdmin ? "Yes" : "No"}</p></div>
                 <div><p className="text-xs text-muted-foreground">Permissions</p><p className="font-medium">{effectivePerms.size} granted</p></div>
               </div>
             </div>
             <div className="rounded-lg bg-warning/5 border border-warning/20 p-3 text-sm text-muted-foreground">
-              ⚠️ Creating this admin will send a welcome email with their temporary password. This action will be logged to the Audit Trail.
+              ⚠️ Creating this admin will send an invite email. The admin must set their password before they can log in. This action will be logged to the Audit Trail.
             </div>
           </div>
         )}
@@ -408,13 +393,129 @@ function AddAdminModal({ open, onClose }: { open: boolean; onClose: () => void }
             {step > 1 ? <><ChevronLeft className="h-4 w-4 mr-1" /> Back</> : "Cancel"}
           </Button>
           {step < 4 ? (
-            <Button onClick={() => setStep(s => s + 1)} disabled={step === 1 && (!form.name || !form.email)}>
+            <Button onClick={() => setStep(s => s + 1)} disabled={step === 1 && (!form.firstName || !form.lastName || !form.username || !form.email)}>
               Next <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button onClick={handleClose} className="bg-success hover:bg-success/90 text-success-foreground">
-              <Check className="h-4 w-4 mr-2" /> Create Admin
+            <Button
+              onClick={() => createAdminMutation.mutate({
+                email: form.email,
+                username: form.username,
+                firstName: form.firstName,
+                lastName: form.lastName,
+                roleIds: form.role ? [form.role] : [],
+                isSuperAdmin: form.isSuperAdmin,
+              })}
+              disabled={createAdminMutation.isPending}
+              className="bg-success hover:bg-success/90 text-success-foreground"
+            >
+              {createAdminMutation.isPending
+                ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending invite...</>
+                : <><Check className="h-4 w-4 mr-2" /> Send Invite</>}
             </Button>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Audit Details Dialog ─────────────────────────────────────────────────────
+
+function parseDetails(raw: string | null): Record<string, unknown> | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function AuditDetailsDialog({
+  log,
+  open,
+  onOpenChange,
+}: {
+  log: AuditLog | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  if (!log) return null;
+  const parsed = parseDetails(log.details);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Audit Log Details</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-2">
+          {/* Log metadata */}
+          <div className="rounded-lg border border-border p-3">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-xs text-muted-foreground">Timestamp</p>
+                <p className="font-medium">
+                  {new Date(log.timestamp).toLocaleString("en-US", {
+                    month: "short", day: "numeric", year: "numeric",
+                    hour: "2-digit", minute: "2-digit",
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Result</p>
+                <div className="mt-0.5">
+                  <StatusBadge status={log.result.toUpperCase() === "OK" ? "success" : "error"}>
+                    {log.result}
+                  </StatusBadge>
+                </div>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Admin</p>
+                <p className="font-medium">{log.adminName}</p>
+                <p className="text-xs text-muted-foreground font-mono">{log.adminEmail}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">IP Address</p>
+                <p className="font-mono text-xs mt-0.5">{log.ipAddress}</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Action</p>
+                <span className="inline-flex items-center px-2 py-0.5 rounded bg-muted text-xs font-mono mt-0.5">
+                  {log.action}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Entity</p>
+                <p className="text-sm">{log.entityType}</p>
+                <p className="text-xs text-muted-foreground font-mono">{log.entityId}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Details payload */}
+          {log.details && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Payload Details
+              </p>
+              {parsed ? (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5">
+                  {Object.entries(parsed).map(([k, v]) => (
+                    <div key={k} className="flex items-start gap-3">
+                      <p className="text-xs text-muted-foreground w-28 flex-shrink-0 pt-0.5">{k}</p>
+                      <p className="text-xs font-medium break-all font-mono">
+                        {typeof v === "object" ? JSON.stringify(v) : String(v)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-lg border border-border bg-muted/30 p-3">
+                  <p className="text-xs font-mono text-muted-foreground break-all">{log.details}</p>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </DialogContent>
@@ -424,8 +525,80 @@ function AddAdminModal({ open, onClose }: { open: boolean; onClose: () => void }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const AUDIT_TAKE = 20;
+
 export default function AdminRoles() {
   const [addAdminOpen, setAddAdminOpen] = useState(false);
+  const resendInviteMutation = useResendAdminInvite();
+
+  // ── Admin Users ──
+  const [adminSearch, setAdminSearch] = useState("");
+  const { data: adminUsers, isLoading: isAdminLoading, isError: isAdminError } = useAdminUsers();
+
+  const filteredAdmins = (adminUsers ?? []).filter(u => {
+    if (!adminSearch.trim()) return true;
+    const q = adminSearch.toLowerCase();
+    return (
+      u.fullName.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q) ||
+      u.username.toLowerCase().includes(q)
+    );
+  });
+
+  // ── Audit Trail ──
+  const [auditSkip, setAuditSkip] = useState(0);
+  const [adminIdInput, setAdminIdInput] = useState("");
+  const [adminId, setAdminId] = useState("");
+  const [actionInput, setActionInput] = useState("");
+  const [auditAction, setAuditAction] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [selectedAuditLog, setSelectedAuditLog] = useState<AuditLog | null>(null);
+  const [auditDetailOpen, setAuditDetailOpen] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setAdminId(adminIdInput), 400);
+    return () => clearTimeout(t);
+  }, [adminIdInput]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setAuditAction(actionInput), 400);
+    return () => clearTimeout(t);
+  }, [actionInput]);
+
+  useEffect(() => {
+    setAuditSkip(0);
+  }, [adminId, auditAction, from, to]);
+
+  const { data: auditLogs, isLoading: isAuditLoading, isError: isAuditError } = useAuditLogs({
+    adminId,
+    action: auditAction,
+    from: from || undefined,
+    to: to || undefined,
+    skip: auditSkip,
+    take: AUDIT_TAKE,
+  });
+
+  const auditItems = auditLogs ?? [];
+  const auditPage = Math.floor(auditSkip / AUDIT_TAKE) + 1;
+  const hasNextAudit = auditItems.length >= AUDIT_TAKE;
+  const hasPrevAudit = auditSkip > 0;
+  const hasAuditFilters = !!adminIdInput || !!actionInput || !!from || !!to;
+
+  const clearAuditFilters = () => {
+    setAdminIdInput("");
+    setAdminId("");
+    setActionInput("");
+    setAuditAction("");
+    setFrom("");
+    setTo("");
+    setAuditSkip(0);
+  };
+
+  const openAuditDetail = (log: AuditLog) => {
+    setSelectedAuditLog(log);
+    setAuditDetailOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -460,7 +633,9 @@ export default function AdminRoles() {
                   <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", role.color)}>{role.name}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{role.description}</p>
-                <p className="text-sm font-medium mt-2">{admins.filter(a => a.role === role.id).length} admins</p>
+                <p className="text-sm font-medium mt-2">
+                  {(adminUsers ?? []).filter(u => u.primaryRole === role.name).length} admins
+                </p>
               </div>
             ))}
           </div>
@@ -471,72 +646,119 @@ export default function AdminRoles() {
               <h3 className="content-card-title">Admin Users</h3>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input type="search" placeholder="Search admins..." className="pl-9" />
+                <Input
+                  type="search"
+                  placeholder="Search admins..."
+                  className="pl-9"
+                  value={adminSearch}
+                  onChange={e => setAdminSearch(e.target.value)}
+                />
               </div>
             </div>
             <table className="data-table">
               <thead>
                 <tr>
                   <th>Admin</th>
-                  <th>Role</th>
+                  <th>Username</th>
+                  <th>Primary Role</th>
                   <th>Status</th>
-                  <th>2FA</th>
+                  <th>Super Admin</th>
                   <th>Last Login</th>
+                  <th>Last Active</th>
                   <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {admins.map(admin => {
-                  const role = roles.find(r => r.id === admin.role);
-                  return (
-                    <tr key={admin.id}>
-                      <td>
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-sm font-medium text-primary">
-                              {admin.name.split(" ").map(n => n[0]).join("")}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="font-medium">{admin.name}</p>
-                            <p className="text-xs text-muted-foreground">{admin.email}</p>
-                          </div>
+                {isAdminLoading && (
+                  <tr>
+                    <td colSpan={8} className="py-12">
+                      <div className="flex justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {isAdminError && (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-sm text-destructive">
+                      Failed to load admin users. Please try again.
+                    </td>
+                  </tr>
+                )}
+                {!isAdminLoading && !isAdminError && filteredAdmins.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                      No admins found.
+                    </td>
+                  </tr>
+                )}
+                {filteredAdmins.map(admin => (
+                  <tr key={admin.id}>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-medium text-primary">{admin.initials}</span>
                         </div>
-                      </td>
-                      <td>
-                        <span className={cn("inline-flex items-center px-2 py-1 rounded text-xs font-medium", role?.color)}>
-                          {role?.name}
+                        <div>
+                          <p className="font-medium">{admin.fullName}</p>
+                          <p className="text-xs text-muted-foreground">{admin.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-sm text-muted-foreground font-mono">{admin.username}</td>
+                    <td>
+                      <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-muted text-muted-foreground">
+                        {admin.primaryRole}
+                      </span>
+                    </td>
+                    <td>
+                      <StatusBadge status={admin.status === "Pending" ? "warning" : admin.isActive ? "success" : "error"}>
+                        {admin.status === "Pending" ? "Pending" : admin.isActive ? "Active" : "Inactive"}
+                      </StatusBadge>
+                    </td>
+                    <td>
+                      {admin.isSuperAdmin ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-destructive/10 text-destructive">
+                          Super Admin
                         </span>
-                      </td>
-                      <td>
-                        <StatusBadge status={admin.status === "active" ? "success" : "neutral"}>
-                          {admin.status}
-                        </StatusBadge>
-                      </td>
-                      <td>
-                        <span className={cn("text-xs font-medium", admin.require2fa ? "text-success" : "text-muted-foreground")}>
-                          {admin.require2fa ? "Enabled" : "Disabled"}
-                        </span>
-                      </td>
-                      <td className="text-muted-foreground">{admin.lastLogin}</td>
-                      <td className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View Activity</DropdownMenuItem>
-                            <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit Role</DropdownMenuItem>
-                            <DropdownMenuItem>Reset Password</DropdownMenuItem>
-                            <DropdownMenuItem className={admin.status === "active" ? "text-destructive" : "text-success"}>
-                              {admin.status === "active" ? "Disable Admin" : "Enable Admin"}
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
+                    </td>
+                    <td className="text-sm text-muted-foreground">
+                      {admin.lastLoginAt
+                        ? new Date(admin.lastLoginAt).toLocaleString("en-US", {
+                            month: "short", day: "numeric", year: "numeric",
+                            hour: "2-digit", minute: "2-digit",
+                          })
+                        : "Never"}
+                    </td>
+                    <td className="text-sm text-muted-foreground">{admin.lastActiveDisplay ?? "—"}</td>
+                    <td className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> View Activity</DropdownMenuItem>
+                          <DropdownMenuItem><Edit className="mr-2 h-4 w-4" /> Edit Role</DropdownMenuItem>
+                          <DropdownMenuItem>Reset Password</DropdownMenuItem>
+                          {!admin.isActive && (
+                            <DropdownMenuItem
+                              onClick={() => resendInviteMutation.mutate(admin.id)}
+                              disabled={resendInviteMutation.isPending}
+                            >
+                              <Mail className="mr-2 h-4 w-4" /> Resend Invite
                             </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </td>
-                    </tr>
-                  );
-                })}
+                          )}
+                          <DropdownMenuItem className={admin.isActive ? "text-destructive" : "text-success"}>
+                            {admin.isActive ? "Disable Admin" : "Enable Admin"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -587,14 +809,62 @@ export default function AdminRoles() {
 
         {/* ── AUDIT TRAIL TAB ── */}
         <TabsContent value="audit" className="space-y-4">
-          <div className="content-card">
-            <div className="content-card-header">
-              <h3 className="content-card-title">Audit Trail</h3>
-              <div className="relative w-64">
+          {/* Filters */}
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">Admin ID</span>
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input type="search" placeholder="Search audit logs..." className="pl-9" />
+                <Input
+                  type="search"
+                  placeholder="Filter by admin ID..."
+                  className="pl-9 w-52"
+                  value={adminIdInput}
+                  onChange={e => setAdminIdInput(e.target.value)}
+                />
               </div>
             </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">Action</span>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Filter by action..."
+                  className="pl-9 w-48"
+                  value={actionInput}
+                  onChange={e => setActionInput(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">From</span>
+              <Input
+                type="date"
+                className="w-40"
+                value={from}
+                onChange={e => setFrom(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs text-muted-foreground">To</span>
+              <Input
+                type="date"
+                className="w-40"
+                value={to}
+                onChange={e => setTo(e.target.value)}
+              />
+            </div>
+            {hasAuditFilters && (
+              <Button variant="ghost" size="sm" onClick={clearAuditFilters} className="text-muted-foreground self-end">
+                <X className="mr-1 h-3.5 w-3.5" />
+                Clear
+              </Button>
+            )}
+          </div>
+
+          {/* Table */}
+          <div className="content-card">
             <table className="data-table">
               <thead>
                 <tr>
@@ -602,35 +872,109 @@ export default function AdminRoles() {
                   <th>Admin</th>
                   <th>Action</th>
                   <th>Entity</th>
-                  <th>Details</th>
                   <th>IP Address</th>
+                  <th>Result</th>
+                  <th className="text-right">Details</th>
                 </tr>
               </thead>
               <tbody>
-                {auditLogs.map(log => (
-                  <tr key={log.id}>
-                    <td className="text-muted-foreground font-mono text-sm">{log.timestamp}</td>
-                    <td className="font-medium">{log.admin}</td>
-                    <td>
-                      <span className="inline-flex items-center px-2 py-1 rounded bg-muted text-xs font-mono">{log.action}</span>
-                    </td>
-                    <td>
-                      <div>
-                        <p className="font-medium">{log.entity}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{log.entityId}</p>
+                {isAuditLoading && (
+                  <tr>
+                    <td colSpan={7} className="py-12">
+                      <div className="flex justify-center">
+                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       </div>
                     </td>
-                    <td className="max-w-xs truncate text-muted-foreground">{log.details}</td>
-                    <td className="font-mono text-sm text-muted-foreground">{log.ip}</td>
+                  </tr>
+                )}
+                {isAuditError && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-sm text-destructive">
+                      Failed to load audit logs. Please try again.
+                    </td>
+                  </tr>
+                )}
+                {!isAuditLoading && !isAuditError && auditItems.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
+                      No audit logs found.
+                    </td>
+                  </tr>
+                )}
+                {auditItems.map(log => (
+                  <tr key={log.id}>
+                    <td className="text-muted-foreground font-mono text-sm whitespace-nowrap">
+                      {new Date(log.timestamp).toLocaleString("en-US", {
+                        month: "short", day: "numeric", year: "numeric",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                    </td>
+                    <td>
+                      <p className="font-medium text-sm">{log.adminName}</p>
+                      <p className="text-xs text-muted-foreground">{log.adminEmail}</p>
+                    </td>
+                    <td>
+                      <span className="inline-flex items-center px-2 py-1 rounded bg-muted text-xs font-mono">
+                        {log.action}
+                      </span>
+                    </td>
+                    <td>
+                      <p className="font-medium text-sm">{log.entityType}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{log.entityId}</p>
+                    </td>
+                    <td className="font-mono text-sm text-muted-foreground">{log.ipAddress}</td>
+                    <td>
+                      <StatusBadge status={log.result.toUpperCase() === "OK" ? "success" : "error"}>
+                        {log.result}
+                      </StatusBadge>
+                    </td>
+                    <td className="text-right">
+                      <Button size="sm" variant="ghost" onClick={() => openAuditDetail(log)}>
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Skip/take pagination */}
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">
+              {auditItems.length === 0 ? "No entries" : `Page ${auditPage} · ${auditItems.length} entries`}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!hasPrevAudit}
+                onClick={() => setAuditSkip(s => Math.max(0, s - AUDIT_TAKE))}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Prev
+              </Button>
+              <span className="text-sm font-medium px-2">Page {auditPage}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!hasNextAudit}
+                onClick={() => setAuditSkip(s => s + AUDIT_TAKE)}
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
 
       <AddAdminModal open={addAdminOpen} onClose={() => setAddAdminOpen(false)} />
+      <AuditDetailsDialog
+        log={selectedAuditLog}
+        open={auditDetailOpen}
+        onOpenChange={setAuditDetailOpen}
+      />
     </div>
   );
 }

@@ -1,5 +1,10 @@
 import { Loader2 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { cn } from "@/lib/utils";
 import { useDepositDetail } from "@/hooks/useDepositQueries";
@@ -10,14 +15,45 @@ interface DepositDetailsSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
+const APP_TIME_ZONE = "Africa/Lagos";
+
+function parseUtc(value: string | number | Date): Date {
+  if (typeof value === "string" && !/(Z|[+-]\d{2}:?\d{2})$/.test(value)) {
+    return new Date(`${value.replace(" ", "T")}Z`);
+  }
+  return new Date(value);
+}
+
+function formatDateTime(
+  value: string | number | Date,
+  opts: Intl.DateTimeFormatOptions = {},
+): string {
+  return parseUtc(value).toLocaleString("en-US", {
+    timeZone: APP_TIME_ZONE,
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    ...opts,
+  });
+}
+
 function statusVariant(status: string): "success" | "warning" | "error" {
   const s = status.toLowerCase();
-  if (["credited", "completed", "confirmed", "complete"].includes(s)) return "success";
+  if (["credited", "completed", "confirmed", "complete"].includes(s))
+    return "success";
   if (["processing", "pending", "detected"].includes(s)) return "warning";
   return "error";
 }
 
-function DetailRow({ label, value }: { label: string; value?: React.ReactNode }) {
+function DetailRow({
+  label,
+  value,
+}: {
+  label: string;
+  value?: React.ReactNode;
+}) {
   return (
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
@@ -29,14 +65,23 @@ function DetailRow({ label, value }: { label: string; value?: React.ReactNode })
 function RefRow({ label, value }: { label: string; value?: string | null }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <p className="text-xs text-muted-foreground w-32 flex-shrink-0">{label}</p>
+      <p className="text-xs text-muted-foreground w-32 flex-shrink-0">
+        {label}
+      </p>
       <p className="font-mono text-xs text-right break-all">{value || "—"}</p>
     </div>
   );
 }
 
-export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDetailsSheetProps) {
-  const { data: deposit, isLoading } = useDepositDetail(depositId, open && !!depositId);
+export function DepositDetailsSheet({
+  depositId,
+  open,
+  onOpenChange,
+}: DepositDetailsSheetProps) {
+  const { data: deposit, isLoading } = useDepositDetail(
+    depositId,
+    open && !!depositId,
+  );
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -51,12 +96,16 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : !deposit ? (
-            <p className="text-sm text-muted-foreground">No deposit data available.</p>
+            <p className="text-sm text-muted-foreground">
+              No deposit data available.
+            </p>
           ) : (
             <div className="space-y-6">
               {/* Summary Card */}
               <div className="rounded-lg border border-success/20 bg-success/5 p-4 text-center space-y-2">
-                <p className="text-xs text-muted-foreground">Amount Deposited</p>
+                <p className="text-xs text-muted-foreground">
+                  Amount Deposited
+                </p>
                 <p className="text-3xl font-bold text-success">
                   {Number(deposit.amountUsdt).toFixed(2)} {deposit.asset}
                 </p>
@@ -95,8 +144,8 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
                           step.failed
                             ? "bg-destructive text-destructive-foreground"
                             : step.completed
-                            ? "bg-success text-success-foreground"
-                            : "bg-muted text-muted-foreground"
+                              ? "bg-success text-success-foreground"
+                              : "bg-muted text-muted-foreground",
                         )}
                       >
                         {step.failed ? "✗" : step.completed ? "✓" : i + 1}
@@ -108,8 +157,8 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
                             step.failed
                               ? "text-destructive"
                               : step.completed
-                              ? "text-foreground"
-                              : "text-muted-foreground"
+                                ? "text-foreground"
+                                : "text-muted-foreground",
                           )}
                         >
                           {step.label}
@@ -122,12 +171,7 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
                       </div>
                       {step.timestamp && (
                         <span className="text-xs text-muted-foreground font-mono">
-                          {new Date(step.timestamp).toLocaleString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
+                          {formatDateTime(step.timestamp, { year: undefined })}
                         </span>
                       )}
                     </div>
@@ -145,7 +189,11 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
                   <DetailRow label="Phone" value={deposit.userPhone} />
                   <DetailRow
                     label="Sub-wallet"
-                    value={<span className="font-mono text-xs">{deposit.subwalletId}</span>}
+                    value={
+                      <span className="font-mono text-xs">
+                        {deposit.subwalletId}
+                      </span>
+                    }
                   />
                   <DetailRow label="Country" value={deposit.country} />
                 </div>
@@ -162,41 +210,44 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
                     <DetailRow label="Bank" value={deposit.ycBankName} />
                   )}
                   {deposit.ycAccountNumber && (
-                    <DetailRow label="Account Number" value={deposit.ycAccountNumber} />
+                    <DetailRow
+                      label="Account Number"
+                      value={deposit.ycAccountNumber}
+                    />
                   )}
                   {deposit.ycAccountName && (
-                    <DetailRow label="Account Name" value={deposit.ycAccountName} />
+                    <DetailRow
+                      label="Account Name"
+                      value={deposit.ycAccountName}
+                    />
                   )}
-                  <DetailRow label="Asset / Network" value={`${deposit.asset} (${deposit.network})`} />
+                  <DetailRow
+                    label="Asset / Network"
+                    value={`${deposit.asset} (${deposit.network})`}
+                  />
                   <DetailRow
                     label="Unit Price"
-                    value={deposit.unitPrice > 0 ? `$${Number(deposit.unitPrice).toFixed(4)}` : "—"}
+                    value={
+                      deposit.unitPrice > 0
+                        ? `$${Number(deposit.unitPrice).toFixed(4)}`
+                        : "—"
+                    }
                   />
                   <DetailRow
                     label="Fee %"
-                    value={deposit.feePercent > 0 ? `${deposit.feePercent}%` : "—"}
+                    value={
+                      deposit.feePercent > 0 ? `${deposit.feePercent}%` : "—"
+                    }
                   />
                   {deposit.expiresAtUtc && (
                     <DetailRow
                       label="Expires At"
-                      value={new Date(deposit.expiresAtUtc).toLocaleString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      value={formatDateTime(deposit.expiresAtUtc)}
                     />
                   )}
                   <DetailRow
                     label="Created At"
-                    value={new Date(deposit.createdAt).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
+                    value={formatDateTime(deposit.createdAt)}
                   />
                 </div>
               </div>
@@ -218,7 +269,9 @@ export function DepositDetailsSheet({ depositId, open, onOpenChange }: DepositDe
               {deposit.errorMessage && (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4">
                   <p className="text-sm font-medium text-destructive">Error</p>
-                  <p className="text-sm text-muted-foreground mt-1">{deposit.errorMessage}</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {deposit.errorMessage}
+                  </p>
                 </div>
               )}
             </div>

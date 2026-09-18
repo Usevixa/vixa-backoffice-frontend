@@ -56,3 +56,13 @@ export interface FlagUserPayload {
 export interface ToggleTradePayload {
   enabled: boolean;
 }
+
+// Payload for POST /api/v1/admin/users/{userId}/lock-wallet
+export interface LockWalletPayload {
+  reason: string;
+}
+
+// Payload for POST /api/v1/admin/users/{userId}/unlock-wallet
+export interface UnlockWalletPayload {
+  reason: string;
+}

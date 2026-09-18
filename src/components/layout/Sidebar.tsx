@@ -15,6 +15,7 @@ import {
   ChevronRight,
   History,
   ShieldCheck,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -30,10 +31,11 @@ const navigation = [
   { name: "Withdrawals (Network Out)", href: "/withdrawals", icon: ArrowUpRight },
   { name: "Transaction History", href: "/transaction-history", icon: History },
   { name: "KYC", href: "/kyc", icon: ShieldCheck },
+  { name: "Onboarding Tracker", href: "/onboarding", icon: ClipboardList },
   { name: "Rates & Markups", href: "/rates", icon: Percent, disabled: true },
-  { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook, disabled: true },
+  { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook },
   { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale, disabled: true },
-  { name: "Admin Roles & Audit Trail", href: "/admin-roles", icon: UserCog, disabled: true },
+  { name: "Admin Roles & Audit Trail", href: "/admin-roles", icon: UserCog },
   { name: "System Settings", href: "/settings", icon: Settings, disabled: true },
 ];
 

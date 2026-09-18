@@ -10,6 +10,7 @@ export interface AdminUser {
   fullName: string;
   isActive: boolean;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
   roles: string[];
   permissions: string[];
 }
@@ -23,6 +24,7 @@ interface AuthState {
 interface AuthActions {
   setToken: (token: string) => void;
   setUser: (user: AdminUser) => void;
+  clearMustChangePassword: () => void;
   logout: () => void;
 }
 
@@ -38,6 +40,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 
       setUser: (user) =>
         set({ user }),
+
+      clearMustChangePassword: () =>
+        set((state) => ({
+          user: state.user ? { ...state.user, mustChangePassword: false } : null,
+        })),
 
       logout: () =>
         set({ token: null, user: null, isAuthenticated: false }),

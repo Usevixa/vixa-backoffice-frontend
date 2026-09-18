@@ -21,6 +21,8 @@
     "noImplicitAny": false,
     "noFallthroughCasesInSwitch": false,
 
+    "types": ["node"],
+
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

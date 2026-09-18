@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Loader2, UserX, Flag, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader2, UserX, Flag, AlertTriangle, ChevronLeft, ChevronRight, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +30,8 @@ import {
   useToggleWithdrawal,
   useToggleTrade,
   useFlagUser,
+  useLockWallet,
+  useUnlockWallet,
 } from "@/hooks/useUserQueries";
 
 interface UserDetailsSheetProps {
@@ -57,6 +61,8 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
   const [adminNotes, setAdminNotes] = useState("");
   const [activityPage, setActivityPage] = useState(1);
   const [notesPage, setNotesPage] = useState(1);
+  const [walletAction, setWalletAction] = useState<"lock" | "unlock" | null>(null);
+  const [walletReason, setWalletReason] = useState("");
 
   const enabled = open && !!user;
 
@@ -78,12 +84,19 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
     enabled
   );
 
+  function closeWalletDialog() {
+    setWalletAction(null);
+    setWalletReason("");
+  }
+
   const freezeWalletsMutation = useFreezeWallets();
   const unfreezeWalletMutation = useUnfreezeWallet();
   const toggleWithdrawalMutation = useToggleWithdrawal();
   const toggleTradeMutation = useToggleTrade();
   const flagUserMutation = useFlagUser();
   const updateNotesMutation = useUpdateUserNotes(() => setAdminNotes(""));
+  const lockWalletMutation = useLockWallet(closeWalletDialog);
+  const unlockWalletMutation = useUnlockWallet(closeWalletDialog);
 
   if (!user) return null;
 
@@ -287,6 +300,29 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
                   <Flag className="mr-2 h-4 w-4" />
                   {user.isFlagged ? "Remove Flag" : "Flag"}
                 </Button>
+              </div>
+              <div className="flex gap-3">
+                {user.walletStatus !== "locked" ? (
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-destructive/50 text-destructive hover:bg-destructive/5"
+                    onClick={() => setWalletAction("lock")}
+                    disabled={lockWalletMutation.isPending}
+                  >
+                    <Lock className="mr-2 h-4 w-4" />
+                    Lock Wallet
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-success/50 text-success hover:bg-success/5"
+                    onClick={() => setWalletAction("unlock")}
+                    disabled={unlockWalletMutation.isPending}
+                  >
+                    <Unlock className="mr-2 h-4 w-4" />
+                    Unlock Wallet
+                  </Button>
+                )}
               </div>
               <p className="text-xs text-muted-foreground text-center">
                 All actions logged to Audit Trail
@@ -613,6 +649,56 @@ export function UserDetailsSheet({ user, open, onOpenChange }: UserDetailsSheetP
           </Tabs>
         </div>
       </SheetContent>
+      <Dialog
+        open={walletAction !== null}
+        onOpenChange={(open) => { if (!open) closeWalletDialog(); }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {walletAction === "lock" ? "Lock" : "Unlock"} Wallet
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <p className="text-sm text-muted-foreground">
+              {walletAction === "lock"
+                ? "This will restrict the user's wallet access. Provide a reason."
+                : "This will restore the user's wallet access. Provide a reason."}
+            </p>
+            <Input
+              placeholder="Enter reason (required)"
+              value={walletReason}
+              onChange={(e) => setWalletReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeWalletDialog}>
+              Cancel
+            </Button>
+            <Button
+              variant={walletAction === "lock" ? "destructive" : "default"}
+              disabled={
+                !walletReason.trim() ||
+                lockWalletMutation.isPending ||
+                unlockWalletMutation.isPending
+              }
+              onClick={() => {
+                if (!user || !walletReason.trim()) return;
+                if (walletAction === "lock") {
+                  lockWalletMutation.mutate({ userId: user.userId, payload: { reason: walletReason } });
+                } else {
+                  unlockWalletMutation.mutate({ userId: user.userId, payload: { reason: walletReason } });
+                }
+              }}
+            >
+              {(lockWalletMutation.isPending || unlockWalletMutation.isPending) && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Confirm
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Sheet>
   );
 }
