@@ -5,6 +5,7 @@ import {
   getOnboardingUserDetail,
   getOnboardingFunnel,
   triggerOnboardingScan,
+  exportOnboardingDropoffs,
 } from "@/services/onboarding.service";
 import {
   OnboardingDropoff,
@@ -23,6 +24,45 @@ function getErrorMessage(err: unknown): string {
     return err.message;
   }
   return "Something went wrong. Please try again.";
+}
+
+// With responseType "blob", error bodies also come back as Blob,
+// so we need to read them before extracting the backend message.
+async function getBlobErrorMessage(err: unknown): Promise<string> {
+  const data = (err as any)?.response?.data;
+  if (data instanceof Blob) {
+    try {
+      const json = JSON.parse(await data.text());
+      if (typeof json?.message === "string" && json.message.trim()) {
+        return json.message;
+      }
+    } catch {
+      // not JSON — fall through
+    }
+  }
+  return getErrorMessage(err);
+}
+
+function getFilenameFromDisposition(disposition?: string): string {
+  const fallback = `onboarding-dropoffs-${new Date().toISOString().slice(0, 10)}.csv`;
+  if (!disposition) return fallback;
+
+  const utf8Match = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1].replace(/"/g, ""));
+
+  const plainMatch = disposition.match(/filename="?([^";]+)"?/i);
+  return plainMatch?.[1] ?? fallback;
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 // ---------------------------------------------------------------------------
@@ -82,5 +122,27 @@ export function useTriggerOnboardingScan(onSuccess?: () => void) {
       onSuccess?.();
     },
     onError: (err) => toast.error(getErrorMessage(err)),
+  });
+}
+
+export function useExportOnboardingDropoffs() {
+  return useMutation({
+    mutationFn: (filters: Omit<OnboardingDropoffsFilter, "page" | "pageSize">) => {
+      const params: Record<string, string | boolean> = {};
+      if (filters.search?.trim()) params.search = filters.search.trim();
+      if (filters.stage && filters.stage !== "all") params.stage = filters.stage;
+      if (filters.onlyActive) params.onlyActive = true;
+      return exportOnboardingDropoffs(params);
+    },
+    onSuccess: (res: any) => {
+      const blob =
+        res?.data instanceof Blob
+          ? res.data
+          : new Blob([res?.data ?? ""], { type: "text/csv;charset=utf-8" });
+      const filename = getFilenameFromDisposition(res?.headers?.["content-disposition"]);
+      downloadBlob(blob, filename);
+      toast.success("Export downloaded");
+    },
+    onError: async (err) => toast.error(await getBlobErrorMessage(err)),
   });
 }

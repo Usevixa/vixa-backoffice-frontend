@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   TrendingDown,
   BanIcon,
+  Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   useOnboardingDropoffs,
   useOnboardingFunnel,
   useTriggerOnboardingScan,
+  useExportOnboardingDropoffs,
 } from "@/hooks/useOnboardingQueries";
 import { OnboardingDetailsSheet } from "@/components/onboarding/OnboardingDetailsSheet";
 import { OnboardingDropoff } from "@/types/onboarding";
@@ -73,6 +75,7 @@ export default function Onboarding() {
   const { data: funnel } = useOnboardingFunnel();
 
   const triggerScanMutation = useTriggerOnboardingScan();
+  const exportMutation = useExportOnboardingDropoffs();
 
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
@@ -103,18 +106,33 @@ export default function Onboarding() {
             Monitor user onboarding progress, drop-offs, and funnel health
           </p>
         </div>
-        <Button
-          onClick={() => triggerScanMutation.mutate()}
-          disabled={triggerScanMutation.isPending}
-          size="sm"
-        >
-          {triggerScanMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <ScanLine className="mr-2 h-4 w-4" />
-          )}
-          Trigger Scan
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => exportMutation.mutate({ search, stage, onlyActive })}
+            disabled={exportMutation.isPending}
+          >
+            {exportMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Export CSV
+          </Button>
+          <Button
+            onClick={() => triggerScanMutation.mutate()}
+            disabled={triggerScanMutation.isPending}
+            size="sm"
+          >
+            {triggerScanMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ScanLine className="mr-2 h-4 w-4" />
+            )}
+            Trigger Scan
+          </Button>
+        </div>
       </div>
 
       {/* Funnel summary */}
@@ -132,7 +150,9 @@ export default function Onboarding() {
             <p className="metric-label">Completion Rate</p>
           </div>
           <p className="metric-value mt-1 text-success">
-            {funnel != null ? `${Number(funnel.completionRatePct).toFixed(1)}%` : "—"}
+            {funnel != null
+              ? `${Number(funnel.completionRatePct).toFixed(1)}%`
+              : "—"}
           </p>
         </div>
         <div className="metric-card border-warning/30">
@@ -140,14 +160,18 @@ export default function Onboarding() {
             <TrendingDown className="h-4 w-4 text-warning" />
             <p className="metric-label">Active Drop-offs</p>
           </div>
-          <p className="metric-value mt-1 text-warning">{funnel?.activeDropOffs ?? "—"}</p>
+          <p className="metric-value mt-1 text-warning">
+            {funnel?.activeDropOffs ?? "—"}
+          </p>
         </div>
         <div className="metric-card border-destructive/30">
           <div className="flex items-center gap-2">
             <BanIcon className="h-4 w-4 text-destructive" />
             <p className="metric-label">Opted Out</p>
           </div>
-          <p className="metric-value mt-1 text-destructive">{funnel?.optedOut ?? "—"}</p>
+          <p className="metric-value mt-1 text-destructive">
+            {funnel?.optedOut ?? "—"}
+          </p>
         </div>
       </div>
 
@@ -182,12 +206,20 @@ export default function Onboarding() {
             checked={onlyActive}
             onCheckedChange={(val) => setOnlyActive(val)}
           />
-          <label htmlFor="only-active" className="text-sm cursor-pointer select-none">
+          <label
+            htmlFor="only-active"
+            className="text-sm cursor-pointer select-none"
+          >
             Only Active
           </label>
         </div>
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="text-muted-foreground"
+          >
             <X className="mr-1 h-3.5 w-3.5" />
             Clear
           </Button>
@@ -221,20 +253,30 @@ export default function Onboarding() {
             )}
             {isError && (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-sm text-destructive">
+                <td
+                  colSpan={8}
+                  className="py-12 text-center text-sm text-destructive"
+                >
                   Failed to load onboarding drop-offs. Please try again.
                 </td>
               </tr>
             )}
             {!isLoading && !isError && items.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                <td
+                  colSpan={8}
+                  className="py-12 text-center text-sm text-muted-foreground"
+                >
                   No drop-offs found.
                 </td>
               </tr>
             )}
             {items.map((row) => (
-              <DropoffRow key={row.progressId} row={row} onSelect={openDetail} />
+              <DropoffRow
+                key={row.progressId}
+                row={row}
+                onSelect={openDetail}
+              />
             ))}
           </tbody>
         </table>
@@ -247,7 +289,7 @@ export default function Onboarding() {
             ? "0"
             : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(
                 currentPage * PAGE_SIZE,
-                total
+                total,
               )}`}{" "}
           of {total}
         </span>
@@ -314,7 +356,11 @@ function DropoffRow({
         <span
           className={cn(
             "text-sm font-medium",
-            row.hoursStuck >= 48 ? "text-destructive" : row.hoursStuck >= 24 ? "text-warning" : ""
+            row.hoursStuck >= 48
+              ? "text-destructive"
+              : row.hoursStuck >= 24
+                ? "text-warning"
+                : "",
           )}
         >
           {row.hoursStuck}h
@@ -331,13 +377,19 @@ function DropoffRow({
       </td>
       <td>
         {row.hasOptedOut ? (
-          <span className="text-xs font-medium text-destructive">Opted Out</span>
+          <span className="text-xs font-medium text-destructive">
+            Opted Out
+          </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </td>
       <td className="text-right" onClick={(e) => e.stopPropagation()}>
-        <Button size="sm" variant="ghost" onClick={() => onSelect(row.phoneNumber)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onSelect(row.phoneNumber)}
+        >
           <Eye className="h-4 w-4" />
         </Button>
       </td>
