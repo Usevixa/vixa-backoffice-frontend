@@ -65,17 +65,30 @@ function downloadBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+// Shared by the table query and the export so both always filter identically.
+// Shared by the table query and the export so both always filter identically.
+function buildDropoffFilterParams(
+  filters: Omit<OnboardingDropoffsFilter, "page" | "pageSize">,
+): Record<string, string | boolean> {
+  const params: Record<string, string | boolean> = {};
+  if (filters.search?.trim()) params.search = filters.search.trim();
+  if (filters.stage && filters.stage !== "all") params.stage = filters.stage;
+  if (filters.onlyActive) params.onlyActive = true;
+  if (filters.dateFrom) params.StartDate = filters.dateFrom;
+  if (filters.dateTo) params.EndDate = filters.dateTo;
+  return params;
+}
+
 // ---------------------------------------------------------------------------
 // Queries
 // ---------------------------------------------------------------------------
 
 export function useOnboardingDropoffs(filters: OnboardingDropoffsFilter) {
-  const params: Record<string, string | number | boolean> = {};
-  if (filters.search?.trim()) params.search = filters.search.trim();
-  if (filters.stage && filters.stage !== "all") params.stage = filters.stage;
-  if (filters.onlyActive) params.onlyActive = true;
-  params.page = filters.page ?? 1;
-  params.pageSize = filters.pageSize ?? 20;
+  const params: Record<string, string | number | boolean> = {
+    ...buildDropoffFilterParams(filters),
+    page: filters.page ?? 1,
+    pageSize: filters.pageSize ?? 20,
+  };
 
   return useQuery({
     queryKey: ["onboarding-dropoffs", params] as const,
@@ -90,7 +103,10 @@ export function useOnboardingDropoffs(filters: OnboardingDropoffsFilter) {
   });
 }
 
-export function useOnboardingUserDetail(phoneNumber: string | null, enabled: boolean) {
+export function useOnboardingUserDetail(
+  phoneNumber: string | null,
+  enabled: boolean,
+) {
   return useQuery({
     queryKey: ["onboarding-user", phoneNumber] as const,
     queryFn: () => getOnboardingUserDetail(phoneNumber!),
@@ -127,19 +143,17 @@ export function useTriggerOnboardingScan(onSuccess?: () => void) {
 
 export function useExportOnboardingDropoffs() {
   return useMutation({
-    mutationFn: (filters: Omit<OnboardingDropoffsFilter, "page" | "pageSize">) => {
-      const params: Record<string, string | boolean> = {};
-      if (filters.search?.trim()) params.search = filters.search.trim();
-      if (filters.stage && filters.stage !== "all") params.stage = filters.stage;
-      if (filters.onlyActive) params.onlyActive = true;
-      return exportOnboardingDropoffs(params);
-    },
+    mutationFn: (
+      filters: Omit<OnboardingDropoffsFilter, "page" | "pageSize">,
+    ) => exportOnboardingDropoffs(buildDropoffFilterParams(filters)),
     onSuccess: (res: any) => {
       const blob =
         res?.data instanceof Blob
           ? res.data
           : new Blob([res?.data ?? ""], { type: "text/csv;charset=utf-8" });
-      const filename = getFilenameFromDisposition(res?.headers?.["content-disposition"]);
+      const filename = getFilenameFromDisposition(
+        res?.headers?.["content-disposition"],
+      );
       downloadBlob(blob, filename);
       toast.success("Export downloaded");
     },

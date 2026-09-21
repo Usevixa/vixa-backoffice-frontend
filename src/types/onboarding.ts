@@ -62,6 +62,8 @@ export interface OnboardingDropoffsFilter {
   search?: string;
   stage?: string;
   onlyActive?: boolean;
+  dateFrom?: string;
+  dateTo?: string;
   page?: number;
   pageSize?: number;
 }
