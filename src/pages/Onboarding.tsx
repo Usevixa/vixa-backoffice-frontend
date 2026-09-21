@@ -54,6 +54,8 @@ export default function Onboarding() {
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("all");
   const [onlyActive, setOnlyActive] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
@@ -62,12 +64,14 @@ export default function Onboarding() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, stage, onlyActive]);
+  }, [search, stage, onlyActive, dateFrom, dateTo]);
 
   const { data, isLoading, isError } = useOnboardingDropoffs({
     search,
     stage,
     onlyActive,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
     page: currentPage,
     pageSize: PAGE_SIZE,
   });
@@ -81,13 +85,16 @@ export default function Onboarding() {
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  const hasActiveFilters = !!searchInput || stage !== "all" || onlyActive;
+  const hasActiveFilters =
+    !!searchInput || stage !== "all" || onlyActive || !!dateFrom || !!dateTo;
 
   const clearFilters = () => {
     setSearchInput("");
     setSearch("");
     setStage("all");
     setOnlyActive(false);
+    setDateFrom("");
+    setDateTo("");
     setCurrentPage(1);
   };
 
@@ -110,7 +117,15 @@ export default function Onboarding() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => exportMutation.mutate({ search, stage, onlyActive })}
+            onClick={() =>
+              exportMutation.mutate({
+                search,
+                stage,
+                onlyActive,
+                dateFrom: dateFrom || undefined,
+                dateTo: dateTo || undefined,
+              })
+            }
             disabled={exportMutation.isPending}
           >
             {exportMutation.isPending ? (
@@ -176,54 +191,76 @@ export default function Onboarding() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="space-y-3">
+        {/* Date range row */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">From</span>
           <Input
-            type="search"
-            placeholder="Search phone, email, name..."
-            className="pl-9"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            type="date"
+            className="w-40"
+            value={dateFrom}
+            max={dateTo || undefined}
+            onChange={(e) => setDateFrom(e.target.value)}
           />
-        </div>
-        <Select value={stage} onValueChange={setStage}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Stage" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
-            {STAGES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-2">
-          <Switch
-            id="only-active"
-            checked={onlyActive}
-            onCheckedChange={(val) => setOnlyActive(val)}
+          <span className="text-sm text-muted-foreground">To</span>
+          <Input
+            type="date"
+            className="w-40"
+            value={dateTo}
+            min={dateFrom || undefined}
+            onChange={(e) => setDateTo(e.target.value)}
           />
-          <label
-            htmlFor="only-active"
-            className="text-sm cursor-pointer select-none"
-          >
-            Only Active
-          </label>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-muted-foreground"
+            >
+              <X className="mr-1 h-3.5 w-3.5" />
+              Clear
+            </Button>
+          )}
         </div>
-        {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="text-muted-foreground"
-          >
-            <X className="mr-1 h-3.5 w-3.5" />
-            Clear
-          </Button>
-        )}
+        {/* Other filters row */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search phone, email, name..."
+              className="pl-9"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+          <Select value={stage} onValueChange={setStage}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stages</SelectItem>
+              {STAGES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="only-active"
+              checked={onlyActive}
+              onCheckedChange={(val) => setOnlyActive(val)}
+            />
+            <label
+              htmlFor="only-active"
+              className="text-sm cursor-pointer select-none"
+            >
+              Only Active
+            </label>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
