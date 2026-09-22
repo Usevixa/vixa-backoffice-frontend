@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   TrendingDown,
   BanIcon,
+  Download,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
   useOnboardingDropoffs,
   useOnboardingFunnel,
   useTriggerOnboardingScan,
+  useExportOnboardingDropoffs,
 } from "@/hooks/useOnboardingQueries";
 import { OnboardingDetailsSheet } from "@/components/onboarding/OnboardingDetailsSheet";
 import { OnboardingDropoff } from "@/types/onboarding";
@@ -52,6 +54,8 @@ export default function Onboarding() {
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("all");
   const [onlyActive, setOnlyActive] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   useEffect(() => {
     const t = setTimeout(() => setSearch(searchInput), 400);
@@ -60,12 +64,14 @@ export default function Onboarding() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, stage, onlyActive]);
+  }, [search, stage, onlyActive, dateFrom, dateTo]);
 
   const { data, isLoading, isError } = useOnboardingDropoffs({
     search,
     stage,
     onlyActive,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
     page: currentPage,
     pageSize: PAGE_SIZE,
   });
@@ -73,18 +79,22 @@ export default function Onboarding() {
   const { data: funnel } = useOnboardingFunnel();
 
   const triggerScanMutation = useTriggerOnboardingScan();
+  const exportMutation = useExportOnboardingDropoffs();
 
   const items = data?.items ?? [];
   const total = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
 
-  const hasActiveFilters = !!searchInput || stage !== "all" || onlyActive;
+  const hasActiveFilters =
+    !!searchInput || stage !== "all" || onlyActive || !!dateFrom || !!dateTo;
 
   const clearFilters = () => {
     setSearchInput("");
     setSearch("");
     setStage("all");
     setOnlyActive(false);
+    setDateFrom("");
+    setDateTo("");
     setCurrentPage(1);
   };
 
@@ -103,18 +113,41 @@ export default function Onboarding() {
             Monitor user onboarding progress, drop-offs, and funnel health
           </p>
         </div>
-        <Button
-          onClick={() => triggerScanMutation.mutate()}
-          disabled={triggerScanMutation.isPending}
-          size="sm"
-        >
-          {triggerScanMutation.isPending ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
-            <ScanLine className="mr-2 h-4 w-4" />
-          )}
-          Trigger Scan
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              exportMutation.mutate({
+                search,
+                stage,
+                onlyActive,
+                dateFrom: dateFrom || undefined,
+                dateTo: dateTo || undefined,
+              })
+            }
+            disabled={exportMutation.isPending}
+          >
+            {exportMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="mr-2 h-4 w-4" />
+            )}
+            Export CSV
+          </Button>
+          <Button
+            onClick={() => triggerScanMutation.mutate()}
+            disabled={triggerScanMutation.isPending}
+            size="sm"
+          >
+            {triggerScanMutation.isPending ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <ScanLine className="mr-2 h-4 w-4" />
+            )}
+            Trigger Scan
+          </Button>
+        </div>
       </div>
 
       {/* Funnel summary */}
@@ -132,7 +165,9 @@ export default function Onboarding() {
             <p className="metric-label">Completion Rate</p>
           </div>
           <p className="metric-value mt-1 text-success">
-            {funnel != null ? `${Number(funnel.completionRatePct).toFixed(1)}%` : "—"}
+            {funnel != null
+              ? `${Number(funnel.completionRatePct).toFixed(1)}%`
+              : "—"}
           </p>
         </div>
         <div className="metric-card border-warning/30">
@@ -140,58 +175,92 @@ export default function Onboarding() {
             <TrendingDown className="h-4 w-4 text-warning" />
             <p className="metric-label">Active Drop-offs</p>
           </div>
-          <p className="metric-value mt-1 text-warning">{funnel?.activeDropOffs ?? "—"}</p>
+          <p className="metric-value mt-1 text-warning">
+            {funnel?.activeDropOffs ?? "—"}
+          </p>
         </div>
         <div className="metric-card border-destructive/30">
           <div className="flex items-center gap-2">
             <BanIcon className="h-4 w-4 text-destructive" />
             <p className="metric-label">Opted Out</p>
           </div>
-          <p className="metric-value mt-1 text-destructive">{funnel?.optedOut ?? "—"}</p>
+          <p className="metric-value mt-1 text-destructive">
+            {funnel?.optedOut ?? "—"}
+          </p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <div className="space-y-3">
+        {/* Date range row */}
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">From</span>
           <Input
-            type="search"
-            placeholder="Search phone, email, name..."
-            className="pl-9"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            type="date"
+            className="w-40"
+            value={dateFrom}
+            max={dateTo || undefined}
+            onChange={(e) => setDateFrom(e.target.value)}
           />
-        </div>
-        <Select value={stage} onValueChange={setStage}>
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="Stage" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
-            {STAGES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="flex items-center gap-2">
-          <Switch
-            id="only-active"
-            checked={onlyActive}
-            onCheckedChange={(val) => setOnlyActive(val)}
+          <span className="text-sm text-muted-foreground">To</span>
+          <Input
+            type="date"
+            className="w-40"
+            value={dateTo}
+            min={dateFrom || undefined}
+            onChange={(e) => setDateTo(e.target.value)}
           />
-          <label htmlFor="only-active" className="text-sm cursor-pointer select-none">
-            Only Active
-          </label>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearFilters}
+              className="text-muted-foreground"
+            >
+              <X className="mr-1 h-3.5 w-3.5" />
+              Clear
+            </Button>
+          )}
         </div>
-        {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground">
-            <X className="mr-1 h-3.5 w-3.5" />
-            Clear
-          </Button>
-        )}
+        {/* Other filters row */}
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative flex-1 max-w-sm">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search phone, email, name..."
+              className="pl-9"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+            />
+          </div>
+          <Select value={stage} onValueChange={setStage}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="Stage" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Stages</SelectItem>
+              {STAGES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="flex items-center gap-2">
+            <Switch
+              id="only-active"
+              checked={onlyActive}
+              onCheckedChange={(val) => setOnlyActive(val)}
+            />
+            <label
+              htmlFor="only-active"
+              className="text-sm cursor-pointer select-none"
+            >
+              Only Active
+            </label>
+          </div>
+        </div>
       </div>
 
       {/* Table */}
@@ -221,20 +290,30 @@ export default function Onboarding() {
             )}
             {isError && (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-sm text-destructive">
+                <td
+                  colSpan={8}
+                  className="py-12 text-center text-sm text-destructive"
+                >
                   Failed to load onboarding drop-offs. Please try again.
                 </td>
               </tr>
             )}
             {!isLoading && !isError && items.length === 0 && (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                <td
+                  colSpan={8}
+                  className="py-12 text-center text-sm text-muted-foreground"
+                >
                   No drop-offs found.
                 </td>
               </tr>
             )}
             {items.map((row) => (
-              <DropoffRow key={row.progressId} row={row} onSelect={openDetail} />
+              <DropoffRow
+                key={row.progressId}
+                row={row}
+                onSelect={openDetail}
+              />
             ))}
           </tbody>
         </table>
@@ -247,7 +326,7 @@ export default function Onboarding() {
             ? "0"
             : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(
                 currentPage * PAGE_SIZE,
-                total
+                total,
               )}`}{" "}
           of {total}
         </span>
@@ -314,7 +393,11 @@ function DropoffRow({
         <span
           className={cn(
             "text-sm font-medium",
-            row.hoursStuck >= 48 ? "text-destructive" : row.hoursStuck >= 24 ? "text-warning" : ""
+            row.hoursStuck >= 48
+              ? "text-destructive"
+              : row.hoursStuck >= 24
+                ? "text-warning"
+                : "",
           )}
         >
           {row.hoursStuck}h
@@ -331,13 +414,19 @@ function DropoffRow({
       </td>
       <td>
         {row.hasOptedOut ? (
-          <span className="text-xs font-medium text-destructive">Opted Out</span>
+          <span className="text-xs font-medium text-destructive">
+            Opted Out
+          </span>
         ) : (
           <span className="text-xs text-muted-foreground">—</span>
         )}
       </td>
       <td className="text-right" onClick={(e) => e.stopPropagation()}>
-        <Button size="sm" variant="ghost" onClick={() => onSelect(row.phoneNumber)}>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onSelect(row.phoneNumber)}
+        >
           <Eye className="h-4 w-4" />
         </Button>
       </td>
