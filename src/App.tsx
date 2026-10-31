@@ -23,6 +23,7 @@ import ReconciliationSettlement from "@/pages/ReconciliationSettlement";
 import Settings from "@/pages/Settings";
 import AdminRoles from "@/pages/AdminRoles";
 import Onboarding from "@/pages/Onboarding";
+import SupportedCurrencies from "@/pages/SupportedCurrencies";
 import ForceChangePassword from "@/pages/ForceChangePassword";
 import AcceptInvite from "@/pages/AcceptInvite";
 import NotFound from "@/pages/NotFound";
@@ -68,6 +69,7 @@ function AppRoutes() {
         <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
         <Route path="/admin-roles" element={<ProtectedRoute element={<AdminRoles />} />} />
         <Route path="/onboarding" element={<ProtectedRoute element={<Onboarding />} />} />
+        <Route path="/supported-currencies" element={<ProtectedRoute element={<SupportedCurrencies />} />} />
       </Route>
       <Route path="/force-change-password" element={<ForcePasswordRoute />} />
       <Route path="/admin/accept-invite" element={<AcceptInvite />} />

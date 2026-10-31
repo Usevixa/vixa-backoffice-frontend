@@ -16,6 +16,7 @@ import {
   History,
   ShieldCheck,
   ClipboardList,
+  Coins,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -32,6 +33,7 @@ const navigation = [
   { name: "Transaction History", href: "/transaction-history", icon: History },
   { name: "KYC", href: "/kyc", icon: ShieldCheck },
   { name: "Onboarding Tracker", href: "/onboarding", icon: ClipboardList },
+  { name: "Supported Currencies", href: "/supported-currencies", icon: Coins },
   { name: "Rates & Markups", href: "/rates", icon: Percent, disabled: true },
   { name: "Webhooks & Provider Logs", href: "/webhooks", icon: Webhook },
   { name: "Reconciliation & Settlement", href: "/reconciliation", icon: Scale, disabled: true },
